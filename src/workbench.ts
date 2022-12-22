@@ -1,13 +1,23 @@
 import { EventEmitter } from './event-emitter.js';
+import * as d3 from 'd3';
+
+type Point = {
+  x: number,
+  y: number
+}
 
 export class Workbench extends EventEmitter {
-  constructor(svg) {
+  svg: d3.Selection<any, any, SVGElement, any> = null
+  selectedPath: Point[] = []
+
+  constructor(svg: d3.Selection<any, any, SVGElement, any>) {
     super();
     this.svg = svg;
     this.selectedPath = [];
   }
 
   initialize() {
+    console.log(d3);
     this.initializeSurface();
   }
 
@@ -20,7 +30,7 @@ export class Workbench extends EventEmitter {
       this.emit('workbench-drag-start');
     };
 
-    const dragMove = (event) => {
+    const dragMove = (event: d3.D3DragEvent<any, any, any>) => {
       const x = event.x;
       const y = event.y;
       
