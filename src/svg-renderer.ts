@@ -72,8 +72,8 @@ export class SVGRenderer extends EventEmitter {
       itemG.attr('transform', translate(x, y)).datum(item);
 
       itemG.append('rect')
-        .attr('x', 0)
-        .attr('y', 0)
+        .attr('x', -(max.x - min.x) * 0.5)
+        .attr('y', -(max.y - min.y) * 0.5)
         .attr('width', max.x - min.x)
         .attr('height', max.y - min.y)
         .attr('fill', '#DD0')

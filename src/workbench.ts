@@ -37,11 +37,30 @@ export class Workbench extends EventEmitter {
     const renderer = this.renderer;
 
     this.setupLasso();
+    this.setupBounds();
+
     (function run() {
       window.requestAnimationFrame(run);
       Matter.Engine.update(engine, 1000 / 60);
       renderer.update();
     })(); 
+  }
+
+
+  /**
+   * Set up workbench boundary
+   */
+  setupBounds() {
+    // FIXME
+    const w = 800;
+    const h = 400;
+    const padding = 2;
+
+    const north = Matter.Bodies.rectangle(0.5 * w, 0, w, padding, { isStatic: true });
+    const east = Matter.Bodies.rectangle(w - padding, 0.5 * h, padding, h, { isStatic: true });
+    const south = Matter.Bodies.rectangle(0.5 * w, h - padding, w, padding, { isStatic: true });
+    const west = Matter.Bodies.rectangle(0, 0.5 * h, padding, h, { isStatic: true });
+    Matter.Composite.add(this.engine.world, [north, east, south, west]);
   }
 
   /**
@@ -77,12 +96,15 @@ export class Workbench extends EventEmitter {
       Matter.Body.setPosition(item.body, { x: x + dx, y: y + dy });
     });
 
-    renderer.on('item-drag-move', (_, payload: ItemDragEvent) => {
+    renderer.on('item-drag-end', (_, payload: ItemDragEvent) => {
       const { dx, dy, item } = payload;
       const { x, y } = item.body.position;
       const nX = x + dx;
       const nY = y + dy;
-      Matter.Body.applyForce(item.body, { x: nX, y: nY }, { x: item.dx/800, y: item.dy/800 });
+
+      const fx = item.dx / 500;
+      const fy = item.dy / 500;
+      Matter.Body.applyForce(item.body, { x: nX, y: nY }, { x: fx, y: fy });
     });
 
 
