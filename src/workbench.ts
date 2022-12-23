@@ -1,42 +1,42 @@
-import { EventEmitter } from './event-emitter.js';
-import * as d3 from 'd3';
-
-type Point = {
-  x: number,
-  y: number
-}
+import { EventEmitter } from './event-emitter';
+import { SVGRenderer } from './svg-renderer';
+import { Point } from './types';
 
 export class Workbench extends EventEmitter {
-  svg: d3.Selection<any, any, SVGElement, any> = null
-  selectedPath: Point[] = []
+  selectedPath: Point[] = [];
+  renderer: SVGRenderer = null;
+  items: any[] = [];
 
-  constructor(svg: d3.Selection<any, any, SVGElement, any>) {
+  constructor(containerElem: HTMLDivElement) {
     super();
-    this.svg = svg;
+    this.renderer = new SVGRenderer();
+    this.renderer.init(containerElem);
     this.selectedPath = [];
   }
 
-  initialize() {
-    console.log(d3);
-    this.initializeSurface();
+  run() {
+    this.setupItems();
+    this.setupLasso();
   }
 
-  /**
-   * Prepare the workbench surface for lasso-dragging interaction
-   **/
-  initializeSurface() {
-    const dragStart = () => {
-      this.selectedPath = [];
-      this.emit('workbench-drag-start');
-    };
+  setItems(items: any[]) {
+    this.items = items;
+  }
 
-    const dragMove = (event: d3.D3DragEvent<any, any, any>) => {
-      const x = event.x;
-      const y = event.y;
-      
+  setupItems() {
+  }
+
+  setupLasso() {
+    const renderer = this.renderer;
+    renderer.on('surface-drag-start', () => {
+      this.selectedPath = [];
+    });
+
+    renderer.on('surface-drag-move', (_, data) => {
+      const { x, y } = data;
+
       // Don't push unless there is enough distanc3
       const len = this.selectedPath.length - 1;
-      
       if (len < 1) {
         this.selectedPath.push({ x, y });
       } else {
@@ -46,18 +46,7 @@ export class Workbench extends EventEmitter {
         if (dist < 15) return;
         this.selectedPath.push({ x, y });
       }
-      this.emit('workbench-drag-move');
-    };
-
-    const dragEnd = () => {
-      this.emit('workbench-drag-end');
-    };
-
-    const svgDrag = d3.drag()
-      .on('start', dragStart)
-      .on('drag', dragMove)
-      .on('end', dragEnd);
-
-    this.svg.call(svgDrag);
+      renderer.lasso(this.selectedPath);
+    });
   }
 }
