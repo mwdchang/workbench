@@ -1,5 +1,5 @@
-import { EventEmitter } from './event-emitter';
 import { SVGRenderer } from './svg-renderer';
+import { inside } from './polygon-intersect';
 import { Point, Item } from './types';
 import * as Matter from 'matter-js';
 
@@ -11,7 +11,7 @@ type ItemDragEvent = {
   item: Item<any>
 }
 
-export class Workbench extends EventEmitter {
+export class Workbench {
   selectedPath: Point[] = [];
   renderer: SVGRenderer = null;
   items: Item<any>[] = [];
@@ -20,13 +20,12 @@ export class Workbench extends EventEmitter {
   engine: Matter.Engine = null;
 
   constructor(containerElem: HTMLDivElement) {
-    super();
     this.renderer = new SVGRenderer();
     this.renderer.init(containerElem);
     this.selectedPath = [];
 
     this.engine = Matter.Engine.create();
-    this.engine.world.gravity.y = 0;
+    this.engine.gravity.y = 0;
   }
 
   /**
@@ -83,6 +82,7 @@ export class Workbench extends EventEmitter {
       
       return {
         id: i,
+        selected: false,
         body: body, 
         rawData: d
       };
@@ -132,6 +132,27 @@ export class Workbench extends EventEmitter {
         this.selectedPath.push({ x, y });
       }
       renderer.lasso(this.selectedPath);
+    });
+
+    renderer.on('surface-drag-end', () => {
+      const path = this.selectedPath;
+      this.items.forEach(item => {
+        if (this.selectedPath.length < 2) return;
+        const polygon: [number, number][] = path.map(d => [d.x, d.y]);
+        polygon.push([path[0].x, path[0].y]);
+        const isInside = inside([item.body.position.x, item.body.position.y], polygon);
+        if (isInside) {
+          item.selected = true;
+        }
+      });
+    });
+
+    renderer.on('surface-click', () => {
+      this.selectedPath = [];
+      this.items.forEach(item => {
+        item.selected = false;
+      });
+      renderer.lasso([]);
     });
   }
 }

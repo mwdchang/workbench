@@ -5,6 +5,9 @@ import { Point, Item } from "./types";
 
 const translate = (x: number, y: number) => `translate(${x}, ${y})`;
 
+/**
+ * Handles object rendering and sending upstream the interaction semantics.
+ */
 export class SVGRenderer extends EventEmitter {
   svg: d3.Selection<any, any, SVGElement, any> = null
 
@@ -18,11 +21,17 @@ export class SVGRenderer extends EventEmitter {
     this.svg.selectAll<any, Item<any>>('.item-group')
       .attr('transform', d => {
         return translate(d.body.position.x, d.body.position.y);
+      })
+      .attr('stroke-width', d => {
+        return d.selected ? 3 : 1;
       });
   }
 
   lasso(path: Point[]) {
     this.svg.selectAll('.lasso').remove();
+
+    if (path.length < 2) return;
+
     this.svg.selectAll('.lasso')
       .data(path)
       .enter()
@@ -111,5 +120,8 @@ export class SVGRenderer extends EventEmitter {
       .on('end', dragEnd);
 
     this.svg.call(svgDrag);
+    this.svg.on('click', () => {
+      this.emit('surface-click');
+    });
   }
 }

@@ -23,6 +23,9 @@ export type Item<T> = {
   body: Matter.Body
   rawData: T
 
+  // interaction
+  selected: boolean
+
   // empheral calcs
   dx?: number
   dy?: number
