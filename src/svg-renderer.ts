@@ -1,6 +1,9 @@
 import * as d3 from 'd3';
+import {D3DragEvent} from 'd3';
 import {EventEmitter} from './event-emitter';
-import { Point } from "./types";
+import { Point, Item } from "./types";
+
+const translate = (x: number, y: number) => `translate(${x}, ${y})`;
 
 export class SVGRenderer extends EventEmitter {
   svg: d3.Selection<any, any, SVGElement, any> = null
@@ -8,8 +11,14 @@ export class SVGRenderer extends EventEmitter {
   init(elem: HTMLDivElement) {
     this.svg = d3.select(elem).append('svg');
     this.svg.style('width', '100%').style('height', '100%');
-
     this.initializeSurface(); 
+  }
+
+  update() {
+    this.svg.selectAll<any, Item<any>>('.item-group')
+      .attr('transform', d => {
+        return translate(d.body.position.x, d.body.position.y);
+      });
   }
 
   lasso(path: Point[]) {
@@ -39,7 +48,43 @@ export class SVGRenderer extends EventEmitter {
       .style('stroke-dasharray', '2 2');
   }
 
-  addItems(items: any[]) {
+  drawItems(items: Item<any>[]) {
+    const dragStart = (event: D3DragEvent<any, any, any>) => {
+      event.sourceEvent.stopPropagation();
+      this.emit('item-drag-start');
+    };
+
+    const dragMove = (event: d3.D3DragEvent<any, any, any>, d: Item<any>) => {
+      const { x, y, dx, dy } = event;
+      this.emit('item-drag-move', { x, y, dx, dy, item: d });
+    };
+
+    const dragEnd = (event: d3.D3DragEvent<any, any, any>, d: Item<any>) => {
+      const { x, y, dx, dy } = event;
+      this.emit('item-drag-end', { x, y, dx, dy, item: d });
+    };
+
+    items.forEach(item => {
+      const itemG = this.svg.append('g').classed('item-group', true);
+      const { x, y } = item.body.position;
+      const { max, min } = item.body.bounds;
+
+      itemG.attr('transform', translate(x, y)).datum(item);
+
+      itemG.append('rect')
+        .attr('x', 0)
+        .attr('y', 0)
+        .attr('width', max.x - min.x)
+        .attr('height', max.y - min.y)
+        .attr('fill', '#DD0')
+        .attr('stroke', '#BBB');
+
+      const itemDrag = d3.drag()
+        .on('start', dragStart)
+        .on('drag', dragMove)
+        .on('end', dragEnd);
+      itemG.call(itemDrag);
+    });
   }
 
   /**
@@ -67,6 +112,4 @@ export class SVGRenderer extends EventEmitter {
 
     this.svg.call(svgDrag);
   }
-
 }
-
