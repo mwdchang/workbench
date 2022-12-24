@@ -1,4 +1,5 @@
 import { SVGRenderer } from './svg-renderer';
+import { Popup } from './popup';
 import { inside } from './polygon-intersect';
 import { Point, Item } from './types';
 import * as Matter from 'matter-js';
@@ -26,6 +27,9 @@ export class Workbench {
 
     this.engine = Matter.Engine.create();
     this.engine.gravity.y = 0;
+
+    const testPop = new Popup({ x: 200, y: 200});
+    testPop.attach();
   }
 
   /**

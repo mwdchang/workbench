@@ -10,15 +10,17 @@ const translate = (x: number, y: number) => `translate(${x}, ${y})`;
  */
 export class SVGRenderer extends EventEmitter {
   svg: d3.Selection<any, any, SVGElement, any> = null
+  surface: d3.Selection<any, any, SVGElement, any> = null
 
   init(elem: HTMLDivElement) {
     this.svg = d3.select(elem).append('svg');
     this.svg.style('width', '100%').style('height', '100%');
+    this.surface = this.svg.append('g');
     this.initializeSurface(); 
   }
 
   update() {
-    this.svg.selectAll<any, Item<any>>('.item-group')
+    this.surface.selectAll<any, Item<any>>('.item-group')
       .attr('transform', d => {
         return translate(d.body.position.x, d.body.position.y);
       })
@@ -28,11 +30,11 @@ export class SVGRenderer extends EventEmitter {
   }
 
   lasso(path: Point[]) {
-    this.svg.selectAll('.lasso').remove();
+    this.surface.selectAll('.lasso').remove();
 
     if (path.length < 2) return;
 
-    this.svg.selectAll('.lasso')
+    this.surface.selectAll('.lasso')
       .data(path)
       .enter()
       .append('circle')
@@ -47,7 +49,7 @@ export class SVGRenderer extends EventEmitter {
         if (i === 0) return '#369';
         return '#888'
       });
-    this.svg.append('line')
+    this.surface.append('line')
       .classed('lasso', true)
       .attr('x1', path[0].x)
       .attr('y1', path[0].y)
@@ -74,7 +76,7 @@ export class SVGRenderer extends EventEmitter {
     };
 
     items.forEach(item => {
-      const itemG = this.svg.append('g').classed('item-group', true);
+      const itemG = this.surface.append('g').classed('item-group', true);
       const { x, y } = item.body.position;
       const { max, min } = item.body.bounds;
 
@@ -119,9 +121,21 @@ export class SVGRenderer extends EventEmitter {
       .on('drag', dragMove)
       .on('end', dragEnd);
 
-    this.svg.call(svgDrag);
-    this.svg.on('click', () => {
+    this.surface.call(svgDrag);
+    this.surface.on('click', () => {
       this.emit('surface-click');
     });
+
+    // Setup zoom
+    // FIXME: Maybe do viewport
+    const zoomed = ({ transform }) => {
+      this.surface.attr('transform', transform);
+    }
+
+    const zoom = d3.zoom()
+      .scaleExtent([1, 10])
+      .translateExtent([[0, 0], [800, 400]])
+      .on("zoom", zoomed);
+    this.svg.call(zoom);
   }
 }
