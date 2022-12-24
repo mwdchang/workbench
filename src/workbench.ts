@@ -16,6 +16,7 @@ export class Workbench {
   selectedPath: Point[] = [];
   renderer: SVGRenderer = null;
   items: Item<any>[] = [];
+  options: WorkBenchOptions = null;
 
   // matter-js
   engine: Matter.Engine = null;
@@ -27,6 +28,8 @@ export class Workbench {
 
     this.engine = Matter.Engine.create();
     this.engine.gravity.y = 0;
+
+    this.options = options;
 
     // const testPop = new Popup({ x: 200, y: 200});
     // testPop.attach();
@@ -54,9 +57,8 @@ export class Workbench {
    * Set up workbench boundary
    */
   setupBounds() {
-    // FIXME
-    const w = 800;
-    const h = 400;
+    const w = this.options.width;
+    const h = this.options.height;
     const padding = 2;
 
     const north = Matter.Bodies.rectangle(0.5 * w, 0, w, padding, { isStatic: true });
@@ -67,7 +69,10 @@ export class Workbench {
   }
 
   /**
-   * Create the base items
+   * Create the base items. 
+   * Each item contains 
+   * - The original datum 
+   * - A rigid body for physics with positional data
    */
   setItems(items: any[]) {
     const renderer = this.renderer;
@@ -115,6 +120,9 @@ export class Workbench {
     renderer.drawItems(this.items);
   }
 
+  /**
+   * Lasso for selecting multiple items
+   **/
   setupLasso() {
     const renderer = this.renderer;
     renderer.on('surface-drag-start', () => {

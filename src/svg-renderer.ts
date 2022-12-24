@@ -12,6 +12,7 @@ export class SVGRenderer extends EventEmitter {
   svg: d3.Selection<any, any, SVGElement, any> = null
   surface: d3.Selection<any, any, SVGElement, any> = null
   options: WorkBenchOptions = null
+  zoomObj: { x: number, y: number, k: number} = { x: 0, y: 0, k: 1 }
 
   constructor(options: WorkBenchOptions) {
     super();
@@ -22,6 +23,23 @@ export class SVGRenderer extends EventEmitter {
     this.svg = d3.select(elem).append('svg');
     this.svg.style('width', '100%').style('height', '100%');
     this.surface = this.svg.append('g');
+
+    // Hack viewport/viewbox
+    const multiplier = 1.25;
+    this.options.width *= multiplier;
+    this.options.height *= multiplier;
+    this.svg.attr('viewBox', `0 0 ${this.options.width} ${this.options.height}`);
+    this.svg.attr('preserveAspectRatio', 'xMinYMin slice');
+
+    this.surface.append('rect')
+      .classed('surface-panel', true)
+      .attr('x', -1)
+      .attr('y', -1)
+      .attr('width', this.options.width + 1) 
+      .attr('height', this.options.height+ 1) 
+      .attr('fill', '#FFF')
+      .attr('opacity', 0);
+
     this.initializeSurface(); 
   }
 
@@ -108,13 +126,19 @@ export class SVGRenderer extends EventEmitter {
    * Prepare the workbench surface for lasso-dragging interaction
    **/
   initializeSurface() {
+
+    function filterDrag(event: any) {
+      event.preventDefault();
+      return event.shiftKey;
+    }
+
     const dragStart = () => {
       this.emit('surface-drag-start');
     };
 
     const dragMove = (event: d3.D3DragEvent<any, any, any>) => {
-      const x = event.x;
-      const y = event.y;
+      const x = (event.x - this.zoomObj.x) / this.zoomObj.k;
+      const y = (event.y - this.zoomObj.y) / this.zoomObj.k;
       this.emit('surface-drag-move', { x, y });
     };
 
@@ -123,18 +147,19 @@ export class SVGRenderer extends EventEmitter {
     };
 
     const svgDrag = d3.drag()
+      .filter(filterDrag)
       .on('start', dragStart)
       .on('drag', dragMove)
       .on('end', dragEnd);
 
     this.surface.call(svgDrag);
-    this.surface.on('click', () => {
+    this.surface.select('.surface-panel').on('click', (_event: any) => {
       this.emit('surface-click');
     });
 
+
     // Setup zoom
     // https://observablehq.com/@d3/pan-zoom-axes
-    // FIXME: Maybe do viewport
     const { width, height } = this.options;
 
     // Debugging grids
@@ -158,6 +183,10 @@ export class SVGRenderer extends EventEmitter {
 
     const zoomed = ({ transform }) => {
       this.surface.attr('transform', transform);
+      this.zoomObj.x = transform.x;
+      this.zoomObj.y = transform.y;
+      this.zoomObj.k = transform.k;
+
       if (this.options.useGrid) {
         gX.call(xAxis.scale(transform.rescaleX(x)));
         gY.call(yAxis.scale(transform.rescaleY(y)));
@@ -173,9 +202,18 @@ export class SVGRenderer extends EventEmitter {
       this.svg.selectAll('.axis').selectAll('text').style('opacity', 0.5);
     }
 
+    function filterZoom(event: any) {
+      // if (!event.shiftKey) return false;
+      // return (event.type === 'wheel') && !event.button;
+      // return (event.button === 0 || event.button === 1);
+      event.preventDefault();
+      return (!event.ctrlKey || event.type === 'wheel') && !event.button;
+    }
+
     const zoom = d3.zoom()
-      .scaleExtent([1, 10])
+      .scaleExtent([1, 50])
       .translateExtent([[0, 0], [width, height]])
+      .filter(filterZoom)
       .on("zoom", zoomed);
     this.svg.call(zoom);
   }
