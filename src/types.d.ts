@@ -18,6 +18,13 @@ export type D3Selection<T> = d3.Selection<d3.BaseType, T, HTMLElement, any>;
 // } & Base<T>
 
 
+export type WorkBenchOptions = {
+  width: number
+  height: number
+  useGrid: boolean
+}
+
+
 export type Item<T> = {
   id: string | number
   body: Matter.Body
@@ -29,4 +36,4 @@ export type Item<T> = {
   // empheral calcs
   dx?: number
   dy?: number
-};
+}

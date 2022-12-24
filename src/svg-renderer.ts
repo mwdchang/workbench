@@ -1,7 +1,7 @@
 import * as d3 from 'd3';
 import {D3DragEvent} from 'd3';
 import {EventEmitter} from './event-emitter';
-import { Point, Item } from "./types";
+import { Point, Item, WorkBenchOptions } from "./types";
 
 const translate = (x: number, y: number) => `translate(${x}, ${y})`;
 
@@ -11,6 +11,12 @@ const translate = (x: number, y: number) => `translate(${x}, ${y})`;
 export class SVGRenderer extends EventEmitter {
   svg: d3.Selection<any, any, SVGElement, any> = null
   surface: d3.Selection<any, any, SVGElement, any> = null
+  options: WorkBenchOptions = null
+
+  constructor(options: WorkBenchOptions) {
+    super();
+    this.options = options;
+  }
 
   init(elem: HTMLDivElement) {
     this.svg = d3.select(elem).append('svg');
@@ -127,14 +133,49 @@ export class SVGRenderer extends EventEmitter {
     });
 
     // Setup zoom
+    // https://observablehq.com/@d3/pan-zoom-axes
     // FIXME: Maybe do viewport
+    const { width, height } = this.options;
+
+    // Debugging grids
+    const x = d3.scaleLinear().domain([-1, width + 1]).range([-1, width + 1]);
+    const y = d3.scaleLinear().domain([-1, height + 1]).range([-1, height + 1]);
+
+    const xAxis = d3.axisBottom(x)
+      .ticks(((width + 2) / (height + 2)) * 10)
+      .tickSize(height)
+      .tickPadding(8 - height)
+
+    const yAxis = d3.axisRight(y)
+      .ticks(10)
+      .tickSize(width)
+      .tickPadding(8 - width)
+
+    const gX = this.svg.append("g").attr("class", "axis axis--x");
+    const gY = this.svg.append("g").attr("class", "axis axis--y");
+
+    // Patch grid to a lighter colour
+
     const zoomed = ({ transform }) => {
       this.surface.attr('transform', transform);
+      if (this.options.useGrid) {
+        gX.call(xAxis.scale(transform.rescaleX(x)));
+        gY.call(yAxis.scale(transform.rescaleY(y)));
+        this.svg.selectAll('.axis').selectAll('line').style('opacity', 0.1);
+        this.svg.selectAll('.axis').selectAll('text').style('opacity', 0.5);
+      }
+    }
+
+    if (this.options.useGrid) {
+      gX.call(xAxis);
+      gY.call(yAxis);
+      this.svg.selectAll('.axis').selectAll('line').style('opacity', 0.1);
+      this.svg.selectAll('.axis').selectAll('text').style('opacity', 0.5);
     }
 
     const zoom = d3.zoom()
       .scaleExtent([1, 10])
-      .translateExtent([[0, 0], [800, 400]])
+      .translateExtent([[0, 0], [width, height]])
       .on("zoom", zoomed);
     this.svg.call(zoom);
   }

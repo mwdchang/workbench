@@ -1,7 +1,7 @@
 import { SVGRenderer } from './svg-renderer';
-import { Popup } from './popup';
+// import { Popup } from './popup';
 import { inside } from './polygon-intersect';
-import { Point, Item } from './types';
+import { Point, Item, WorkBenchOptions } from './types';
 import * as Matter from 'matter-js';
 
 type ItemDragEvent = {
@@ -20,16 +20,16 @@ export class Workbench {
   // matter-js
   engine: Matter.Engine = null;
 
-  constructor(containerElem: HTMLDivElement) {
-    this.renderer = new SVGRenderer();
+  constructor(containerElem: HTMLDivElement, options: WorkBenchOptions) {
+    this.renderer = new SVGRenderer(options);
     this.renderer.init(containerElem);
     this.selectedPath = [];
 
     this.engine = Matter.Engine.create();
     this.engine.gravity.y = 0;
 
-    const testPop = new Popup({ x: 200, y: 200});
-    testPop.attach();
+    // const testPop = new Popup({ x: 200, y: 200});
+    // testPop.attach();
   }
 
   /**
