@@ -1,26 +1,35 @@
-type PopupOption = {
+import {EventEmitter} from "./event-emitter";
+
+type PopupOptions = {
   x: number;
   y: number;
 }
 
-export class Popup {
+export class Popup extends EventEmitter{
   div: HTMLElement = null;
   contentDiv: HTMLElement = null;
   mousedown: boolean = false;
+
   x: number = 0;
   y: number = 0;
+  _x: number = 0;
+  _y: number = 0;
 
-  constructor(option: PopupOption) {
+  constructor(options: PopupOptions) {
+    super();
     this.div = document.createElement('div');
     this.div.className = 'popup';
-    this.div.style.left = `${option.x}px`;
-    this.div.style.top = `${option.y}px`;
+    this.div.style.left = `${options.x}px`;
+    this.div.style.top = `${options.y}px`;
     this.div.id = 'hello';
+
+    this.x = options.x;
+    this.y = options.y;
 
     this.div.addEventListener('mousedown', (event) => {
       this.mousedown = true;
-      this.x = event.pageX;
-      this.y = event.pageY;
+      this._x = event.pageX;
+      this._y = event.pageY;
     });
 
     this.div.addEventListener('mouseup', (_event) => {
@@ -29,12 +38,23 @@ export class Popup {
 
     this.div.addEventListener('mousemove', (event) => {
       if (this.mousedown === false) return;
-      const dx = event.pageX - this.x;
-      const dy = event.pageY - this.y;
-      this.x = event.pageX;
-      this.y = event.pageY;
-      this.div.style.left = `${parseInt(this.div.style.left) + dx}px`;
-      this.div.style.top = `${parseInt(this.div.style.top) + dy}px`;
+      const dx = event.pageX - this._x;
+      const dy = event.pageY - this._y;
+      this._x = event.pageX;
+      this._y = event.pageY;
+
+      const newX = parseInt(this.div.style.left) + dx;
+      const newY = parseInt(this.div.style.top) + dy;
+
+      this.div.style.left = `${newX}px`;
+      this.div.style.top = `${newY}px`;
+      this.x = newX;
+      this.y = newY;
+
+      this.emit('popup-move', {
+        x: this.x,
+        y: this.y  
+      })
     });
 
     this.contentDiv = document.createElement('div');
@@ -57,6 +77,7 @@ export class Popup {
   detatch() {
     if (this.div)
       document.body.removeChild(this.div);
+    this.emit('close');
   }
 }
 

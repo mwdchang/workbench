@@ -1,5 +1,5 @@
 import { SVGRenderer } from './svg-renderer';
-// import { Popup } from './popup';
+import { Popup } from './popup';
 import { inside } from './polygon-intersect';
 import { Point, Item, WorkBenchOptions } from './types';
 import * as Matter from 'matter-js';
@@ -11,6 +11,14 @@ type ItemDragEvent = {
   dy: number,
   item: Item<any>
 }
+
+const EPS = 0.00001;
+
+// const origConsole = console.log;
+// const benchLog = (...args: any) => {
+//   args.unshift('bench');
+//   origConsole.apply(console, args);
+// }
 
 export class Workbench {
   selectedPath: Point[] = [];
@@ -28,11 +36,7 @@ export class Workbench {
 
     this.engine = Matter.Engine.create();
     this.engine.gravity.y = 0;
-
     this.options = options;
-
-    // const testPop = new Popup({ x: 200, y: 200});
-    // testPop.attach();
   }
 
   /**
@@ -54,7 +58,7 @@ export class Workbench {
 
 
   /**
-   * Set up workbench boundary
+   * Set up workbench boundary, these are physically impasable blocks
    */
   setupBounds() {
     const w = this.options.width;
@@ -85,7 +89,7 @@ export class Workbench {
       const height = 40;
 
       const body = Matter.Bodies.rectangle(x, y, width, height, { 
-        friction: 0.8, frictionAir: 0.1 
+        friction: 0.8, frictionAir: 0.01 
       });
       Matter.Composite.add(engine.world, [body]);
       
@@ -111,11 +115,25 @@ export class Workbench {
       const nX = x + dx;
       const nY = y + dy;
 
+      if (item.dx === undefined || item.dy === undefined) return;
+
       const fx = item.dx / 500;
       const fy = item.dy / 500;
+
+      if (Math.abs(fx) < EPS && Math.abs(fy) < EPS) return;
+
       Matter.Body.applyForce(item.body, { x: nX, y: nY }, { x: fx, y: fy });
     });
 
+    renderer.on('item-click', (_, item: Item<any>) => {
+      const popup = new Popup({ x: 200, y: 200 });
+      popup.attach();
+      popup.on('close', () => {
+        this.renderer.unlinkPopup(popup);
+      });
+
+      this.renderer.linkPopup(popup, item);
+    });
 
     renderer.drawItems(this.items);
   }

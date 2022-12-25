@@ -2,6 +2,7 @@ import * as d3 from 'd3';
 import {D3DragEvent} from 'd3';
 import {EventEmitter} from './event-emitter';
 import { Point, Item, WorkBenchOptions } from "./types";
+import { Popup } from './popup';
 
 const translate = (x: number, y: number) => `translate(${x}, ${y})`;
 
@@ -13,6 +14,9 @@ export class SVGRenderer extends EventEmitter {
   surface: d3.Selection<any, any, SVGElement, any> = null
   options: WorkBenchOptions = null
   zoomObj: { x: number, y: number, k: number} = { x: 0, y: 0, k: 1 }
+  multiplier = 1.25;
+
+  linkMap: Map<Popup, Item<any>> = new Map()
 
   constructor(options: WorkBenchOptions) {
     super();
@@ -25,9 +29,8 @@ export class SVGRenderer extends EventEmitter {
     this.surface = this.svg.append('g');
 
     // Hack viewport/viewbox
-    const multiplier = 1.25;
-    this.options.width *= multiplier;
-    this.options.height *= multiplier;
+    this.options.width *= this.multiplier;
+    this.options.height *= this.multiplier;
     this.svg.attr('viewBox', `0 0 ${this.options.width} ${this.options.height}`);
     this.svg.attr('preserveAspectRatio', 'xMinYMin slice');
 
@@ -51,6 +54,43 @@ export class SVGRenderer extends EventEmitter {
       .attr('stroke-width', d => {
         return d.selected ? 3 : 1;
       });
+    this.drawLinks();
+  }
+
+  /**
+   * item work in virtual coordinate
+   * screenPos works in screen coordinate
+   */
+  drawLinks() {
+    this.surface.selectAll('.link').remove();
+
+    const zoomObj = this.zoomObj;
+    for (const [popup, item] of this.linkMap) {
+      const x1 = item.body.position.x;
+      const y1 = item.body.position.y;
+
+      // console.log('!', popup.x, popup.y);
+
+      // Transfrom from screen to surface coord
+      let x2 = (popup.x - zoomObj.x) / zoomObj.k;
+      let y2 = (popup.y - zoomObj.y) / zoomObj.k;
+      x2 *= this.multiplier;
+      y2 *= this.multiplier;
+
+      this.surface.append('line')
+        .classed('link', true)
+        .attr('x1', x1)
+        .attr('y1', y1)
+        .attr('x2', x2)
+        .attr('y2', y2)
+        .style('stroke', '#F20');
+    }
+  }
+  linkPopup(popup: Popup, item: Item<any>) {
+    this.linkMap.set(popup, item);
+  }
+  unlinkPopup(popup: Popup) {
+    this.linkMap.delete(popup);
   }
 
   lasso(path: Point[]) {
@@ -113,6 +153,10 @@ export class SVGRenderer extends EventEmitter {
         .attr('height', max.y - min.y)
         .attr('fill', '#DD0')
         .attr('stroke', '#BBB');
+
+      itemG.on('click', (event: any) => {
+        this.emit('item-click', item);
+      });
 
       const itemDrag = d3.drag()
         .on('start', dragStart)
@@ -211,7 +255,7 @@ export class SVGRenderer extends EventEmitter {
     }
 
     const zoom = d3.zoom()
-      .scaleExtent([1, 50])
+      .scaleExtent([1, 5])
       .translateExtent([[0, 0], [width, height]])
       .filter(filterZoom)
       .on("zoom", zoomed);
