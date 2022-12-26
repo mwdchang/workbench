@@ -3,6 +3,11 @@ export type Point = {
   y: number
 }
 
+export type PopupOptions = {
+  x: number;
+  y: number;
+}
+
 // Short hand for generic selection
 export type D3Selection<T> = d3.Selection<d3.BaseType, T, HTMLElement, any>;
 
@@ -30,8 +35,10 @@ export type Item<T> = {
   body: Matter.Body
   rawData: T
 
-  // interaction
-  selected: boolean
+  // interactios
+  flags: {
+    selected: boolean
+  }
 
   // empheral calcs
   dx?: number

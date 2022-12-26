@@ -1,11 +1,8 @@
-import {EventEmitter} from "./event-emitter";
+import { EventEmitter } from "./event-emitter";
+import { PopupOptions } from './types';
 
-type PopupOptions = {
-  x: number;
-  y: number;
-}
 
-export class Popup extends EventEmitter{
+export class Popup extends EventEmitter {
   div: HTMLElement = null;
   contentDiv: HTMLElement = null;
   mousedown: boolean = false;

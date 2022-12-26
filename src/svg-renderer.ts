@@ -52,7 +52,7 @@ export class SVGRenderer extends EventEmitter {
         return translate(d.body.position.x, d.body.position.y);
       })
       .attr('stroke-width', d => {
-        return d.selected ? 3 : 1;
+        return d.flags.selected ? 3 : 1;
       });
     this.drawLinks();
   }

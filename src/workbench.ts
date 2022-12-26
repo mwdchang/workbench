@@ -29,6 +29,7 @@ export class Workbench {
   // matter-js
   engine: Matter.Engine = null;
 
+
   constructor(containerElem: HTMLDivElement, options: WorkBenchOptions) {
     this.renderer = new SVGRenderer(options);
     this.renderer.init(containerElem);
@@ -95,7 +96,9 @@ export class Workbench {
       
       return {
         id: i,
-        selected: false,
+        flags: {
+          selected: false
+        },
         body: body, 
         rawData: d
       };
@@ -172,7 +175,7 @@ export class Workbench {
         polygon.push([path[0].x, path[0].y]);
         const isInside = inside([item.body.position.x, item.body.position.y], polygon);
         if (isInside) {
-          item.selected = true;
+          item.flags.selected = true;
         }
       });
     });
@@ -180,9 +183,13 @@ export class Workbench {
     renderer.on('surface-click', () => {
       this.selectedPath = [];
       this.items.forEach(item => {
-        item.selected = false;
+        item.flags.selected = false;
       });
       renderer.lasso([]);
     });
+  }
+
+  search(str: string) {
+    console.log('searching', str);
   }
 }
