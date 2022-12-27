@@ -84,7 +84,7 @@ export class Workbench {
     const engine = this.engine;
 
     this.items = items.map((d, i) => {
-      const x = 50;
+      const x = 50 + 25 * i;
       const y = 50 + 50 * i;
       const width = 40;
       const height = 40;
@@ -97,7 +97,8 @@ export class Workbench {
       return {
         id: i,
         flags: {
-          selected: false
+          selected: false,
+          matched: false
         },
         body: body, 
         rawData: d
@@ -191,5 +192,24 @@ export class Workbench {
 
   search(str: string) {
     console.log('searching', str);
+    if (!str || str === '') {
+      this.items.forEach(item => {
+        item.flags.matched = false;
+      });
+      return;
+    }
+
+    this.items.forEach(item => {
+      if (item.rawData.author.includes(str) || item.rawData.title.includes(str)) {
+        console.log('!!!!!!!!');
+        item.flags.matched = true;
+      }
+    });
+  }
+
+  saveState() {
+  }
+
+  loadstate() {
   }
 }

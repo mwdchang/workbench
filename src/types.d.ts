@@ -38,6 +38,7 @@ export type Item<T> = {
   // interactios
   flags: {
     selected: boolean
+    matched: boolean
   }
 
   // empheral calcs

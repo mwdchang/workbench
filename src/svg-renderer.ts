@@ -46,6 +46,10 @@ export class SVGRenderer extends EventEmitter {
     this.initializeSurface(); 
   }
 
+  /**
+   * This is basically the main update loop for non-empheral objects. Changes to positions, status, 
+   * and other visual artifacts should be reflected here.
+   */
   update() {
     this.surface.selectAll<any, Item<any>>('.item-group')
       .attr('transform', d => {
@@ -54,6 +58,21 @@ export class SVGRenderer extends EventEmitter {
       .attr('stroke-width', d => {
         return d.flags.selected ? 3 : 1;
       });
+
+    this.surface.selectAll('.match-marker').remove();
+    this.surface.selectAll<any, Item<any>>('.item-group').each((d, i, g) => {
+      if (d.flags.matched) {
+        d3.select(g[i]).append('circle')
+          .classed('match-marker', true)
+          .attr('cx', 20)
+          .attr('cy', -20)
+          .attr('r', 8)
+          .attr('fill', '#f20')
+          .attr('stroke', '#FFFFFF')
+          .attr('stroke-width', 2);
+      }
+    });
+
     this.drawLinks();
   }
 
