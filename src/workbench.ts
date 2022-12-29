@@ -60,8 +60,10 @@ export class Workbench {
     const engine = this.engine;
     const renderer = this.renderer;
 
-    this.setupLasso();
     this.setupBounds();
+    this.setupLasso();
+    this.setupItemInteractions();
+    this.setupCollectionInteractions();
 
     (function run() {
       window.requestAnimationFrame(run);
@@ -87,45 +89,10 @@ export class Workbench {
   }
 
   /**
-   * Create the base items. 
-   * Each item contains 
-   * - The original datum 
-   * - A rigid body for physics with positional data
-   */
-  setItems(items: any[]) {
+   * Item event callbacks
+   **/
+  setupItemInteractions() {
     const renderer = this.renderer;
-    const engine = this.engine;
-
-    this.items = items.map((d, i) => {
-      const x = 50 + 25 * i;
-      const y = 50 + 50 * i;
-      const width = 40;
-      const height = 40;
-
-      const body = Matter.Bodies.rectangle(x, y, width, height, { 
-        friction: 0.8, frictionAir: 0.01 
-      });
-      Matter.Composite.add(engine.world, [body]);
-      
-      return {
-        id: i,
-        flags: {
-          selected: false,
-          matched: false
-        },
-        body: body, 
-        rawData: d
-      };
-    });
-
-    renderer.on('collection-drag-move', (_, payload: CollectionDragEvent) => {
-      const { dx, dy, collection } = payload;
-      const { x, y } = collection.body.position;
-      collection.dx = dx;
-      collection.dy = dy;
-      Matter.Body.setPosition(collection.body, { x: x + dx, y: y + dy });
-    });
-
 
     renderer.on('item-drag-move', (_, payload: ItemDragEvent) => {
       const { dx, dy, item } = payload;
@@ -160,7 +127,54 @@ export class Workbench {
 
       this.renderer.linkPopup(popup, item);
     });
+  }
 
+
+  /**
+   * Collection event callbacks
+   **/
+  setupCollectionInteractions() {
+    const renderer = this.renderer;
+    renderer.on('collection-drag-move', (_, payload: CollectionDragEvent) => {
+      const { dx, dy, collection } = payload;
+      const { x, y } = collection.body.position;
+      collection.dx = dx;
+      collection.dy = dy;
+      Matter.Body.setPosition(collection.body, { x: x + dx, y: y + dy });
+    });
+  }
+
+  /**
+   * Create the base items.
+   * Each item contains
+   * - The original datum
+   * - A rigid body for physics with positional data
+   */
+  setItems(items: any[]) {
+    const renderer = this.renderer;
+    const engine = this.engine;
+
+    this.items = items.map((d, i) => {
+      const x = 50 + 25 * i;
+      const y = 50 + 50 * i;
+      const width = 40;
+      const height = 40;
+
+      const body = Matter.Bodies.rectangle(x, y, width, height, {
+        friction: 0.8, frictionAir: 0.01
+      });
+      Matter.Composite.add(engine.world, [body]);
+
+      return {
+        id: i,
+        flags: {
+          selected: false,
+          matched: false
+        },
+        body: body, 
+        rawData: d
+      };
+    });
     renderer.addItems(this.items);
   }
 
@@ -302,7 +316,13 @@ export class Workbench {
     console.log('Clear all...');
 
     // Clear the physics engine
-    Matter.World.clear(this.engine.world, false);
+    Matter.Composite.clear(this.engine.world, true, true);
+    // console.log('[clear]', this.engine.world.bodies);
+    // this.engine.world.bodies.forEach((body) => {
+    //   Matter.Composite.remove(this.engine.world, body);
+    // });
+
+    // Matter.Engine.clear(this.engine);
     this.renderer.clear();
 
     this.items = [];
@@ -312,23 +332,30 @@ export class Workbench {
 
   saveState() {
     const itemsPayload = this.items.map(item => {
+      const { max, min } = item.body.bounds;
+
       return {
         id: item.id,
         rawData: item.rawData,
         bodyData: {
           x: item.body.position.x,
-          y: item.body.position.y
+          y: item.body.position.y,
+          width: (max.x - min.x),
+          height: (max.y - min.y)
         }
       };
     });
 
     const collectionsPayload = this.collections.map(collection => {
+      const { max, min } = collection.body.bounds;
       return {
         id: collection.id,
         children: collection.children,
         bodyData: {
           x: collection.body.position.x,
-          y: collection.body.position.y
+          y: collection.body.position.y,
+          width: (max.x - min.x),
+          height: (max.y - min.y)
         }
       };
     });
@@ -344,8 +371,25 @@ export class Workbench {
     const dataStr = localStorage.getItem('workbench');
     const data = JSON.parse(dataStr);
 
+    const items = data.items;
+    items.forEach((item: any) => {
+      const { x, y, width, height } = item.bodyData;
+      const body = Matter.Bodies.rectangle(x, y, width, height, {
+        friction: 0.8, frictionAir: 0.01
+      });
+      Matter.Composite.add(this.engine.world, [body]);
 
-
+      this.items.push({
+        id: item.id,
+        flags: {
+          selected: false,
+          matched: false
+        },
+        body: body,
+        rawData: item.rawData
+      });
+    });
+    this.renderer.addItems(this.items);
     console.log('loading', data);
   }
 }

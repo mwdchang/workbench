@@ -82,7 +82,8 @@ export class SVGRenderer extends EventEmitter {
   }
 
   clear() {
-    this.surface.selectAll('*').remove();
+    this.surface.selectAll('.item-group').remove();
+    this.surface.selectAll('.collection-group').remove();
   }
 
   /**
