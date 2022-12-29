@@ -220,6 +220,9 @@ export class Workbench {
 
       const group: Collection<any> = {
         id: groupName,
+        flags: {
+          matched: false
+        },
         body: body,
         children: selectedItems.map(d => d.rawData)
       };
@@ -305,12 +308,27 @@ export class Workbench {
       this.items.forEach(item => {
         item.flags.matched = false;
       });
+      this.collections.forEach(collection => {
+        collection.flags.matched = false;
+      });
       return;
     }
 
     this.items.forEach(item => {
       if (item.rawData.author.includes(str) || item.rawData.title.includes(str)) {
         item.flags.matched = true;
+      }
+    });
+
+    this.collections.forEach(collection => {
+      let found = false;
+      collection.children.forEach(item => {
+        if (item.author.includes(str) || item.title.includes(str)) {
+          found = true;
+        }
+      });
+      if (found) {
+        collection.flags.matched = true;
       }
     });
   }
@@ -324,7 +342,6 @@ export class Workbench {
     //   Matter.Composite.remove(this.engine.world, body);
     // });
     // Matter.Engine.clear(this.engine);
-    //
     this.renderer.clear();
 
     this.items = [];
@@ -408,6 +425,9 @@ export class Workbench {
 
       this.collections.push({
         id: collection.id,
+        flags: {
+          matched: false
+        },
         body: body,
         children: collection.children
       });

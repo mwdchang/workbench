@@ -38,6 +38,10 @@ export type Collection<T> = {
   body: Matter.Body
   children: T[]
 
+  flags: {
+    matched: boolean
+  },
+
   // empheral calcs
   dx?: number
   dy?: number

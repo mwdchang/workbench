@@ -78,6 +78,19 @@ export class SVGRenderer extends EventEmitter {
           .attr('stroke-width', 2);
       }
     });
+    this.surface.selectAll<any, Collection<any>>('.collection-group').each((d, i, g) => {
+      if (d.flags.matched) {
+        const { max, min } = d.body.bounds;
+        d3.select(g[i]).append('circle')
+          .classed('match-marker', true)
+          .attr('cx', (max.x - min.x) * 0.5)
+          .attr('cy', -(max.y - min.y) * 0.5)
+          .attr('r', 8)
+          .attr('fill', '#f20')
+          .attr('stroke', '#FFFFFF')
+          .attr('stroke-width', 2);
+      }
+    });
     this.drawLinks();
   }
 
