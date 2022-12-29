@@ -298,9 +298,54 @@ export class Workbench {
     });
   }
 
-  saveState() {
+  clear() {
+    console.log('Clear all...');
+
+    // Clear the physics engine
+    Matter.World.clear(this.engine.world, false);
+    this.renderer.clear();
+
+    this.items = [];
+    this.collections = [];
+    this.selectedPath = [];
   }
 
-  loadstate() {
+  saveState() {
+    const itemsPayload = this.items.map(item => {
+      return {
+        id: item.id,
+        rawData: item.rawData,
+        bodyData: {
+          x: item.body.position.x,
+          y: item.body.position.y
+        }
+      };
+    });
+
+    const collectionsPayload = this.collections.map(collection => {
+      return {
+        id: collection.id,
+        children: collection.children,
+        bodyData: {
+          x: collection.body.position.x,
+          y: collection.body.position.y
+        }
+      };
+    });
+
+    localStorage.setItem('workbench', JSON.stringify({
+      items: itemsPayload,
+      collections: collectionsPayload
+    }));
+  }
+
+  loadState() {
+    this.clear();
+    const dataStr = localStorage.getItem('workbench');
+    const data = JSON.parse(dataStr);
+
+
+
+    console.log('loading', data);
   }
 }

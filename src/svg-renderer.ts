@@ -81,6 +81,10 @@ export class SVGRenderer extends EventEmitter {
     this.drawLinks();
   }
 
+  clear() {
+    this.surface.selectAll('*').remove();
+  }
+
   /**
    * item work in virtual coordinate
    * screenPos works in screen coordinate

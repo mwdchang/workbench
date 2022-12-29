@@ -4,8 +4,10 @@ export type Point = {
 }
 
 export type PopupOptions = {
-  x: number;
-  y: number;
+  x: number
+  y: number
+  width?: number
+  height?: number
 }
 
 // Short hand for generic selection
