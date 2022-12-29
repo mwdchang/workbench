@@ -297,6 +297,9 @@ export class Workbench {
     });
   }
 
+  // FIXME
+  // - add collection search
+  // - add levenshtein
   search(str: string) {
     if (!str || str === '') {
       this.items.forEach(item => {
@@ -317,12 +320,11 @@ export class Workbench {
 
     // Clear the physics engine
     Matter.Composite.clear(this.engine.world, true, true);
-    // console.log('[clear]', this.engine.world.bodies);
     // this.engine.world.bodies.forEach((body) => {
     //   Matter.Composite.remove(this.engine.world, body);
     // });
-
     // Matter.Engine.clear(this.engine);
+    //
     this.renderer.clear();
 
     this.items = [];
@@ -370,8 +372,12 @@ export class Workbench {
     this.clear();
     const dataStr = localStorage.getItem('workbench');
     const data = JSON.parse(dataStr);
+    console.log('loading', data);
 
     const items = data.items;
+    const collections = data.collections;
+
+    // Restore items
     items.forEach((item: any) => {
       const { x, y, width, height } = item.bodyData;
       const body = Matter.Bodies.rectangle(x, y, width, height, {
@@ -390,6 +396,22 @@ export class Workbench {
       });
     });
     this.renderer.addItems(this.items);
-    console.log('loading', data);
+
+    // Restore collections
+    collections.forEach((collection: any) => {
+      const { x, y, width, height } = collection.bodyData;
+      const body = Matter.Bodies.rectangle(x, y, width, height, {
+        friction: 0.8, frictionAir: 0.01
+      });
+      console.log('>>', x, y, width, height);
+      Matter.Composite.add(this.engine.world, [body]);
+
+      this.collections.push({
+        id: collection.id,
+        body: body,
+        children: collection.children
+      });
+    });
+    this.renderer.addCollections(this.collections);
   }
 }
