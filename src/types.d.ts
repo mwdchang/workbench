@@ -27,8 +27,15 @@ export type WorkBenchOptions = {
   width: number
   height: number
   useGrid: boolean
+
+  itemDisplayTextFn: (i: Item<any>) => string
 }
 
+export type Collection<T> = {
+  id: string
+  body: Matter.Body
+  children: T[]
+}
 
 export type Item<T> = {
   id: string | number

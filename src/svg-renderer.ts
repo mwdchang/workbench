@@ -1,7 +1,7 @@
 import * as d3 from 'd3';
 import {D3DragEvent} from 'd3';
 import {EventEmitter} from './event-emitter';
-import { Point, Item, WorkBenchOptions } from "./types";
+import { Point, Item, WorkBenchOptions, Collection } from "./types";
 import { Popup } from './popup';
 
 const translate = (x: number, y: number) => `translate(${x}, ${y})`;
@@ -88,11 +88,11 @@ export class SVGRenderer extends EventEmitter {
       const x1 = item.body.position.x;
       const y1 = item.body.position.y;
 
-      // console.log('!', popup.x, popup.y);
+      const bounds = popup.div.getBoundingClientRect();
 
       // Transfrom from screen to surface coord
-      let x2 = (popup.x - zoomObj.x) / zoomObj.k;
-      let y2 = (popup.y - zoomObj.y) / zoomObj.k;
+      let x2 = (popup.x + bounds.width * 0.5 - zoomObj.x) / zoomObj.k;
+      let y2 = (popup.y + bounds.height * 0.5 - zoomObj.y) / zoomObj.k;
       x2 *= this.multiplier;
       y2 *= this.multiplier;
 
@@ -142,7 +142,37 @@ export class SVGRenderer extends EventEmitter {
       .style('stroke-dasharray', '2 2');
   }
 
-  drawItems(items: Item<any>[]) {
+  // removeCollections(groups:Group<any>[]) {
+  // }
+
+
+  addCollections(collections: Collection<any>[]) {
+    collections.forEach(collection => {
+      const collectionG = this.surface.append('g').classed('collection-group', true);
+      const { x, y } = collection.body.position;
+      const { max, min } = collection.body.bounds;
+
+      collectionG.attr('transform', translate(x, y)).datum(collection);
+
+      collectionG.append('rect')
+        .attr('x', -(max.x - min.x) * 0.5)
+        .attr('y', -(max.y - min.y) * 0.5)
+        .attr('width', max.x - min.x)
+        .attr('height', max.y - min.y)
+        .attr('fill', '#FDD')
+        .attr('stroke', '#BBB');
+    });
+  }
+
+  removeItems(items: Item<any>[]) {
+    items.forEach(item => {
+      this.surface.selectAll<any, Item<any>>('.item-group')
+        .filter(d => d.id === item.id)
+        .remove();
+    });
+  }
+
+  addItems(items: Item<any>[]) {
     const dragStart = (event: D3DragEvent<any, any, any>) => {
       event.sourceEvent.stopPropagation();
       this.emit('item-drag-start');
@@ -173,9 +203,23 @@ export class SVGRenderer extends EventEmitter {
         .attr('fill', '#DD0')
         .attr('stroke', '#BBB');
 
-      itemG.on('click', (event: any) => {
+      // itemG.append('text')
+      //   .attr('x', 25)
+      //   .attr('y', 10)
+      //   .text(this.options.itemDisplayTextFn(item));
+
+      itemG.on('click', (_event: any) => {
         this.emit('item-click', item);
       });
+
+      itemG.append('foreignObject')
+        .attr('x', 25)
+        .attr('y', -25)
+        .attr('width', 120)
+        .attr('height', 100)
+        .style('pointer-events', 'none')
+        .append('xhtml:div')
+        .html(this.options.itemDisplayTextFn(item));
 
       const itemDrag = d3.drag()
         .on('start', dragStart)

@@ -5,8 +5,8 @@
     "moduleResolution": "node",
     "declaration": false,
     "declarationMap": false,
-    "module": "es6",
-    "target": "es6"
+    "module": "esnext",
+    "target": "esnext"
   },
   "include": [
     "src/**/*",

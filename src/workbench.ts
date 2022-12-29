@@ -1,7 +1,8 @@
 import { SVGRenderer } from './svg-renderer';
 import { Popup } from './popup';
+import { ItemsPopup } from './items-popup';
 import { inside } from './polygon-intersect';
-import { Point, Item, WorkBenchOptions } from './types';
+import { Point, Item, Collection, WorkBenchOptions } from './types';
 import * as Matter from 'matter-js';
 
 type ItemDragEvent = {
@@ -24,11 +25,15 @@ export class Workbench {
   selectedPath: Point[] = [];
   renderer: SVGRenderer = null;
   items: Item<any>[] = [];
+  collections: Collection<any>[] = [];
+
   options: WorkBenchOptions = null;
 
   // matter-js
   engine: Matter.Engine = null;
 
+
+  contextPopup: Popup = null;
 
   constructor(containerElem: HTMLDivElement, options: WorkBenchOptions) {
     this.renderer = new SVGRenderer(options);
@@ -139,8 +144,67 @@ export class Workbench {
       this.renderer.linkPopup(popup, item);
     });
 
-    renderer.drawItems(this.items);
+    renderer.addItems(this.items);
   }
+
+
+  /**
+   * Context menu for grouping items
+   */
+  setupCollectionContextPopup() {
+    const selectedItems = this.items.filter(d => d.flags.selected === true);
+    if (selectedItems.length === 0) return;
+
+    this.contextPopup = new ItemsPopup({
+      x: 200,
+      y: 200
+    }, selectedItems);
+    this.contextPopup.attach();
+
+    // create new group
+    // 1. reset items flags and remove from physics engine
+    // 2. remove items from renderer
+    // 3. transfer items to new group
+    // 4. add group to physics engine
+    this.contextPopup.on('create-group', (_eventName, groupName) => {
+      console.log('group name', groupName);
+      selectedItems.forEach(item => {
+        item.flags.selected = false;
+        item.flags.matched = false;
+        Matter.World.remove(this.engine.world, item.body);
+      });
+      this.renderer.removeItems(selectedItems);
+
+      const ids = selectedItems.map(d => d.id);
+      this.items = selectedItems.filter(d => {
+        return ids.includes(d.id);
+      });
+
+      // Transfer items to group
+      const body = Matter.Bodies.rectangle(200, 200, 50, 50, { 
+        friction: 0.8, frictionAir: 0.01 
+      });
+      Matter.Composite.add(this.engine.world, [body]);
+
+      const group: Collection<any> = {
+        id: groupName,
+        body: body,
+        children: selectedItems.map(d => d.rawData)
+      };
+      this.collections.push(group);
+      this.renderer.addCollections([group]);
+
+      // clean up lasso
+      this.selectedPath = [];
+      this.renderer.lasso([]);
+    });
+
+    this.contextPopup.on('close', () => {
+      this.selectedPath = [];
+      this.renderer.lasso([]);
+    });
+  }
+
 
   /**
    * Lasso for selecting multiple items
@@ -169,6 +233,11 @@ export class Workbench {
     });
 
     renderer.on('surface-drag-end', () => {
+      // clean up
+      if (this.contextPopup) {
+        this.contextPopup.detatch();
+      }
+
       const path = this.selectedPath;
       this.items.forEach(item => {
         if (this.selectedPath.length < 2) return;
@@ -179,6 +248,9 @@ export class Workbench {
           item.flags.selected = true;
         }
       });
+
+      // show context menu
+      this.setupCollectionContextPopup();
     });
 
     renderer.on('surface-click', () => {
@@ -186,12 +258,12 @@ export class Workbench {
       this.items.forEach(item => {
         item.flags.selected = false;
       });
+
       renderer.lasso([]);
     });
   }
 
   search(str: string) {
-    console.log('searching', str);
     if (!str || str === '') {
       this.items.forEach(item => {
         item.flags.matched = false;
@@ -201,7 +273,6 @@ export class Workbench {
 
     this.items.forEach(item => {
       if (item.rawData.author.includes(str) || item.rawData.title.includes(str)) {
-        console.log('!!!!!!!!');
         item.flags.matched = true;
       }
     });
