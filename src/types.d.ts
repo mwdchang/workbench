@@ -35,6 +35,10 @@ export type Collection<T> = {
   id: string
   body: Matter.Body
   children: T[]
+
+  // empheral calcs
+  dx?: number
+  dy?: number
 }
 
 export type Item<T> = {

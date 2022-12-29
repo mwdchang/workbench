@@ -5,6 +5,14 @@ import { inside } from './polygon-intersect';
 import { Point, Item, Collection, WorkBenchOptions } from './types';
 import * as Matter from 'matter-js';
 
+type CollectionDragEvent = {
+  x: number,
+  y: number,
+  dx: number,
+  dy: number,
+  collection: Collection<any>
+}
+
 type ItemDragEvent = {
   x: number,
   y: number,
@@ -110,6 +118,15 @@ export class Workbench {
       };
     });
 
+    renderer.on('collection-drag-move', (_, payload: CollectionDragEvent) => {
+      const { dx, dy, collection } = payload;
+      const { x, y } = collection.body.position;
+      collection.dx = dx;
+      collection.dy = dy;
+      Matter.Body.setPosition(collection.body, { x: x + dx, y: y + dy });
+    });
+
+
     renderer.on('item-drag-move', (_, payload: ItemDragEvent) => {
       const { dx, dy, item } = payload;
       const { x, y } = item.body.position;
@@ -176,9 +193,10 @@ export class Workbench {
       this.renderer.removeItems(selectedItems);
 
       const ids = selectedItems.map(d => d.id);
-      this.items = selectedItems.filter(d => {
-        return ids.includes(d.id);
+      this.items = this.items.filter(d => {
+        return !ids.includes(d.id);
       });
+      console.log('remainin items', this.items.length, this.items.map(d => d.rawData));
 
       // Transfer items to group
       const body = Matter.Bodies.rectangle(200, 200, 50, 50, { 
@@ -197,11 +215,13 @@ export class Workbench {
       // clean up lasso
       this.selectedPath = [];
       this.renderer.lasso([]);
+      this.contextPopup = null;
     });
 
     this.contextPopup.on('close', () => {
       this.selectedPath = [];
       this.renderer.lasso([]);
+      this.contextPopup = null;
     });
   }
 

@@ -59,20 +59,25 @@ export class SVGRenderer extends EventEmitter {
         return d.flags.selected ? 3 : 1;
       });
 
+    this.surface.selectAll<any, Collection<any>>('.collection-group')
+      .attr('transform', d => {
+        return translate(d.body.position.x, d.body.position.y);
+      });
+
     this.surface.selectAll('.match-marker').remove();
     this.surface.selectAll<any, Item<any>>('.item-group').each((d, i, g) => {
       if (d.flags.matched) {
+        const { max, min } = d.body.bounds;
         d3.select(g[i]).append('circle')
           .classed('match-marker', true)
-          .attr('cx', 20)
-          .attr('cy', -20)
+          .attr('cx', (max.x - min.x) * 0.5)
+          .attr('cy', -(max.y - min.y) * 0.5)
           .attr('r', 8)
           .attr('fill', '#f20')
           .attr('stroke', '#FFFFFF')
           .attr('stroke-width', 2);
       }
     });
-
     this.drawLinks();
   }
 
@@ -147,6 +152,21 @@ export class SVGRenderer extends EventEmitter {
 
 
   addCollections(collections: Collection<any>[]) {
+    const dragStart = (event: D3DragEvent<any, any, any>) => {
+      event.sourceEvent.stopPropagation();
+      this.emit('collection-drag-start');
+    };
+
+    const dragMove = (event: d3.D3DragEvent<any, any, any>, d: Collection<any>) => {
+      const { x, y, dx, dy } = event;
+      this.emit('collection-drag-move', { x, y, dx, dy, collection: d });
+    };
+
+    const dragEnd = (event: d3.D3DragEvent<any, any, any>, d: Collection<any>) => {
+      const { x, y, dx, dy } = event;
+      this.emit('collection-drag-end', { x, y, dx, dy, collection: d });
+    };
+
     collections.forEach(collection => {
       const collectionG = this.surface.append('g').classed('collection-group', true);
       const { x, y } = collection.body.position;
@@ -161,6 +181,22 @@ export class SVGRenderer extends EventEmitter {
         .attr('height', max.y - min.y)
         .attr('fill', '#FDD')
         .attr('stroke', '#BBB');
+
+      const offset = 5;
+      collectionG.append('foreignObject')
+        .attr('x', (max.x - min.x) * 0.5 + offset)
+        .attr('y', -(max.y - min.y) * 0.5 - offset)
+        .attr('width', 120)
+        .attr('height', 50)
+        .style('pointer-events', 'none')
+        .append('xhtml:div')
+        .html(`${collection.id} (${collection.children.length})`);
+
+      const collectionDrag = d3.drag()
+        .on('start', dragStart)
+        .on('drag', dragMove)
+        .on('end', dragEnd);
+      collectionG.call(collectionDrag);
     });
   }
 
@@ -212,9 +248,10 @@ export class SVGRenderer extends EventEmitter {
         this.emit('item-click', item);
       });
 
+      const offset = 5;
       itemG.append('foreignObject')
-        .attr('x', 25)
-        .attr('y', -25)
+        .attr('x', (max.x - min.x) * 0.5 + offset)
+        .attr('y', -(max.y - min.y) * 0.5 - offset)
         .attr('width', 120)
         .attr('height', 100)
         .style('pointer-events', 'none')
