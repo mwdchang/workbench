@@ -1,8 +1,7 @@
 import { PopupOptions, Item } from './types';
 import { Popup } from './popup';
 
-
-export class ItemsPopup extends Popup {
+export class CollectionPopup extends Popup {
   constructor(options: PopupOptions, items: Item<any>[]) {
     super(options);
 

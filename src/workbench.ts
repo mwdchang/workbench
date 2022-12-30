@@ -1,6 +1,6 @@
 import { SVGRenderer } from './svg-renderer';
 import { Popup } from './popup';
-import { ItemsPopup } from './items-popup';
+import { CollectionPopup } from './collection-popup';
 import { inside } from './polygon-intersect';
 import { Point, Item, Collection, WorkBenchOptions } from './types';
 import * as Matter from 'matter-js';
@@ -186,7 +186,7 @@ export class Workbench {
     const selectedItems = this.items.filter(d => d.flags.selected === true);
     if (selectedItems.length === 0) return;
 
-    this.contextPopup = new ItemsPopup({
+    this.contextPopup = new CollectionPopup({
       x: 200,
       y: 200
     }, selectedItems);
