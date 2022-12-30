@@ -18,6 +18,14 @@ export class Popup extends EventEmitter {
     this.div.className = 'popup';
     this.div.style.left = `${options.x}px`;
     this.div.style.top = `${options.y}px`;
+
+    if (options.width) {
+      this.div.style.width = `${options.width}px`;
+    }
+    if (options.height) {
+      this.div.style.height = `${options.height}px`;
+    }
+
     this.div.id = 'hello';
 
     this.x = options.x;

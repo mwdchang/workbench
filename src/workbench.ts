@@ -1,5 +1,5 @@
 import { SVGRenderer } from './svg-renderer';
-import { Popup } from './popup';
+import { DrilldownPopup } from './drilldown-popup';
 import { CollectionPopup } from './collection-popup';
 import { inside } from './polygon-intersect';
 import { Point, Item, Collection, WorkBenchOptions } from './types';
@@ -119,7 +119,7 @@ export class Workbench {
     });
 
     renderer.on('item-click', (_, item: Item<any>) => {
-      const popup = new Popup({ x: 200, y: 200 });
+      const popup = new DrilldownPopup({ x: 200, y: 200, width: 400, height: 250 }, item);
       popup.attach();
       popup.on('close', () => {
         this.renderer.unlinkPopup(popup);
