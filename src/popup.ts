@@ -32,6 +32,10 @@ export class Popup extends EventEmitter {
     this.y = options.y;
 
     this.div.addEventListener('mousedown', (event) => {
+      if (this.div.nextSibling) {
+        this.div.parentNode.appendChild(this.div);
+      }
+      
       this.mousedown = true;
       this._x = event.pageX;
       this._y = event.pageY;
@@ -72,6 +76,16 @@ export class Popup extends EventEmitter {
       this.detatch();
     })
     this.div.appendChild(closeButton);
+
+    // const resizeControl = document.createElement('div');
+    // resizeControl.style.width = '12px';
+    // resizeControl.style.height = '12px';
+    // resizeControl.style.position = 'absolute';
+    // resizeControl.style.top = `${-6}px`;
+    // resizeControl.style.left = `${450 - 6}px`;
+    // resizeControl.style.background = '#ABC';
+    // resizeControl.style.cursor = 'nesw-resize';
+    // this.div.appendChild(resizeControl);
   }
 
   attach() {

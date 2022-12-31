@@ -1,4 +1,5 @@
 import { SVGRenderer } from './svg-renderer';
+import { Popup } from './popup';
 import { DrilldownPopup } from './drilldown-popup';
 import { CollectionPopup } from './collection-popup';
 import { inside } from './polygon-intersect';
@@ -40,8 +41,8 @@ export class Workbench {
   // matter-js
   engine: Matter.Engine = null;
 
-
   contextPopup: Popup = null;
+  shiftKey: boolean = false;
 
   constructor(containerElem: HTMLDivElement, options: WorkBenchOptions) {
     this.renderer = new SVGRenderer(options);
@@ -59,6 +60,17 @@ export class Workbench {
   run() {
     const engine = this.engine;
     const renderer = this.renderer;
+
+    document.addEventListener('keydown', (event) => {
+      if (event.shiftKey) {
+        this.shiftKey = true;
+      }
+    });
+    document.addEventListener('keyup', (event) => {
+      if (!event.shiftKey) {
+        this.shiftKey = false;
+      }
+    });
 
     this.setupBounds();
     this.setupLasso();
@@ -100,6 +112,13 @@ export class Workbench {
       item.dx = dx;
       item.dy = dy;
       Matter.Body.setPosition(item.body, { x: x + dx, y: y + dy });
+
+      // Check if we are in a group
+      const selectedItems = this.items.filter(d => d.id !== item.id && d.flags.selected === true);
+      selectedItems.forEach(d => {
+        const { x, y } = d.body.position;
+        Matter.Body.setPosition(d.body, { x: x + dx, y: y + dy });
+      });
     });
 
     renderer.on('item-drag-end', (_, payload: ItemDragEvent) => {
@@ -116,10 +135,21 @@ export class Workbench {
       if (Math.abs(fx) < EPS && Math.abs(fy) < EPS) return;
 
       Matter.Body.applyForce(item.body, { x: nX, y: nY }, { x: fx, y: fy });
+
+      // Check if we are in a group
+      const selectedItems = this.items.filter(d => d.id !== item.id && d.flags.selected === true);
+      selectedItems.forEach(d => {
+        Matter.Body.applyForce(d.body, { x: nX, y: nY }, { x: fx, y: fy });
+      });
     });
 
     renderer.on('item-click', (_, item: Item<any>) => {
-      const popup = new DrilldownPopup({ x: 200, y: 200, width: 400, height: 250 }, item);
+      if (this.shiftKey === true) {
+        item.flags.selected = !item.flags.selected;
+        return;
+      }
+
+      const popup = new DrilldownPopup({ x: 250, y: 50, width: 500, height: 280 }, item);
       popup.attach();
       popup.on('close', () => {
         this.renderer.unlinkPopup(popup);
@@ -287,7 +317,9 @@ export class Workbench {
       });
 
       // show context menu
-      this.setupCollectionContextPopup();
+      // this.setupCollectionContextPopup();
+      this.selectedPath = [];
+      renderer.lasso([]);
     });
 
     renderer.on('surface-click', () => {
@@ -295,7 +327,6 @@ export class Workbench {
       this.items.forEach(item => {
         item.flags.selected = false;
       });
-
       renderer.lasso([]);
     });
   }

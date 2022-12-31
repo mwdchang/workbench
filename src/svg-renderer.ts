@@ -14,7 +14,7 @@ export class SVGRenderer extends EventEmitter {
   surface: d3.Selection<any, any, SVGElement, any> = null
   options: WorkBenchOptions = null
   zoomObj: { x: number, y: number, k: number} = { x: 0, y: 0, k: 1 }
-  multiplier = 1.25;
+  multiplier = 1.25
 
   linkMap: Map<Popup, Item<any>> = new Map()
 
@@ -149,12 +149,11 @@ export class SVGRenderer extends EventEmitter {
       .attr('cy', d => d.y)
       .attr('r', (_, i) => {
         if (i === 0) return 5;
-        return 2;
+        return 3;
       })
-      .attr('fill', (_, i) => {
-        if (i === 0) return '#369';
-        return '#888'
-      });
+      .attr('fill', '#888')
+      .attr('stroke', '#888');
+
     this.surface.append('line')
       .classed('lasso', true)
       .attr('x1', path[0].x)

@@ -1,3 +1,4 @@
+import * as marked from 'marked';
 import { PopupOptions, Item } from './types';
 import { Popup } from './popup';
 
@@ -71,13 +72,30 @@ export class DrilldownPopup extends Popup {
 
   showAnnotation() {
     const tabContent = document.createElement('div');
-    const textarea = document.createElement('textarea');
-
+    tabContent.style.display = 'flex';
     tabContent.className = 'tab-content';
-    textarea.style.width = '100%';
-    textarea.style.height = '100%';
+    tabContent.style['flex-direction'] = 'row';
+
+    const textarea = document.createElement('textarea');
+    textarea.style.width = '50%';
+    textarea.style.height = '12rem';
+
+    const markdown = document.createElement('div');
+    markdown.style.padding = '2px';
+    markdown.style.height = '12rem';
+    markdown.style.overflowY = 'scroll';
+
     tabContent.appendChild(textarea);
+    tabContent.appendChild(markdown);
+
     this.contentDiv.appendChild(tabContent);
+
+    // Bind auto markdown generation
+    textarea.addEventListener('input', () => {
+      const markdownHTML = marked.parse(textarea.value);
+      markdown.innerHTML = '';
+      markdown.innerHTML = markdownHTML;
+    });
   }
 
   showViewer() {
@@ -86,7 +104,7 @@ export class DrilldownPopup extends Popup {
     iframe.style.width = '100%';
     iframe.style.height = '100%';
 
-    iframe.src = 'https://s3-us-west-2.amazonaws.com/openai-assets/research-covers/language-unsupervised/language_understanding_paper.pdf';
+    iframe.src = 'https://s3-us-west-2.amazonaws.com/openai-assets/research-covers/language-unsupervised/language_understanding_paper.pdf#zoom=75';
 
     tabContent.className = 'tab-content';
     tabContent.appendChild(iframe);

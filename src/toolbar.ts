@@ -61,7 +61,9 @@ export class Toolbar extends EventEmitter {
       this.workbench.clear();
     });
 
+
     const searchInput = document.createElement('input');
+    searchInput.style.width = '20rem';
     searchInput.placeholder = 'Search...';
     searchInput.addEventListener('input', () => {
       let str = searchInput.value;
