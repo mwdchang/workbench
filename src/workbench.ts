@@ -114,6 +114,7 @@ export class Workbench {
       Matter.Body.setPosition(item.body, { x: x + dx, y: y + dy });
 
       // Check if we are in a group
+      if (item.flags.selected === false) return;
       const selectedItems = this.items.filter(d => d.id !== item.id && d.flags.selected === true);
       selectedItems.forEach(d => {
         const { x, y } = d.body.position;
@@ -137,6 +138,7 @@ export class Workbench {
       Matter.Body.applyForce(item.body, { x: nX, y: nY }, { x: fx, y: fy });
 
       // Check if we are in a group
+      if (item.flags.selected === false) return;
       const selectedItems = this.items.filter(d => d.id !== item.id && d.flags.selected === true);
       selectedItems.forEach(d => {
         Matter.Body.applyForce(d.body, { x: nX, y: nY }, { x: fx, y: fy });
