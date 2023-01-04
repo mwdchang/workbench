@@ -29,6 +29,7 @@ export type WorkBenchOptions = {
   width: number
   height: number
   useGrid: boolean
+  useRotation: boolean
 
   itemDisplayTextFn: (i: Item<any>) => string
 }

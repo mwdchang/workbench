@@ -22,6 +22,13 @@ type ItemDragEvent = {
   item: Item<any>
 }
 
+type ItemClickEvent = {
+  x: number,
+  y: number,
+  item: Item<any>
+}
+
+
 const EPS = 0.00001;
 
 // const origConsole = console.log;
@@ -145,13 +152,16 @@ export class Workbench {
       });
     });
 
-    renderer.on('item-click', (_, item: Item<any>) => {
+    renderer.on('item-click', (_, payload: ItemClickEvent) => {
+      const { item, x, y } = payload;
       if (this.shiftKey === true) {
         item.flags.selected = !item.flags.selected;
         return;
       }
 
-      const popup = new DrilldownPopup({ x: 250, y: 50, width: 500, height: 280 }, item);
+      const popupX = x + 20;
+      const popupY = y + 20;
+      const popup = new DrilldownPopup({ x: popupX, y: popupY, width: 600, height: 320 }, item);
       popup.attach();
       popup.on('close', () => {
         this.renderer.unlinkPopup(popup);

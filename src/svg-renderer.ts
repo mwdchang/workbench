@@ -6,6 +6,9 @@ import { Popup } from './popup';
 
 const translate = (x: number, y: number) => `translate(${x}, ${y})`;
 
+const C_ITEM_FILL = '#DDDD00';
+const C_ITEM_SELECTED = '#336699';
+
 /**
  * Handles object rendering and sending upstream the interaction semantics.
  */
@@ -53,10 +56,20 @@ export class SVGRenderer extends EventEmitter {
   update() {
     this.surface.selectAll<any, Item<any>>('.item-group')
       .attr('transform', d => {
-        return translate(d.body.position.x, d.body.position.y);
-      })
+        if (this.options.useRotation) {
+          return translate(d.body.position.x, d.body.position.y) + ` rotate(${d.body.angle})`;
+        } else {
+          return translate(d.body.position.x, d.body.position.y); 
+        }
+      });
+
+    this.surface.selectAll<any, Item<any>>('.item-group')
+      .select('rect')
       .attr('stroke-width', d => {
         return d.flags.selected ? 3 : 1;
+      })
+      .attr('stroke', d => {
+        return d.flags.selected ? C_ITEM_SELECTED : C_ITEM_FILL;
       });
 
     this.surface.selectAll<any, Collection<any>>('.collection-group')
@@ -253,16 +266,17 @@ export class SVGRenderer extends EventEmitter {
         .attr('y', -(max.y - min.y) * 0.5)
         .attr('width', max.x - min.x)
         .attr('height', max.y - min.y)
-        .attr('fill', '#DD0')
-        .attr('stroke', '#BBB');
+        .attr('fill', C_ITEM_FILL)
+        .attr('stroke', '#BBB')
+        .style('cursor', 'pointer');
 
       // itemG.append('text')
       //   .attr('x', 25)
       //   .attr('y', 10)
       //   .text(this.options.itemDisplayTextFn(item));
 
-      itemG.on('click', (_event: any) => {
-        this.emit('item-click', item);
+      itemG.on('click', (event: any) => {
+        this.emit('item-click', { x: event.x, y: event. y, item });
       });
 
       const offset = 5;
