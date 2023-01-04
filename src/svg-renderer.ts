@@ -153,6 +153,13 @@ export class SVGRenderer extends EventEmitter {
 
     if (path.length < 2) return;
 
+    const pathFn = d3.line().x((d: any) => d.x).y((d: any) => d.y);
+    this.surface.append('path')
+      .classed('lasso', true)
+      .attr('d', pathFn(path as any) as any)
+      .style('fill', C_ITEM_SELECTED)
+      .style('fill-opacity', 0.1);
+
     this.surface.selectAll('.lasso')
       .data(path)
       .enter()

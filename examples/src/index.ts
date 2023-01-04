@@ -21,16 +21,22 @@ const items = [
     author: 'Daniel Wigdor'
   },
   {
-    title: 'The Signal and the Noise',
-    author: 'Nate Silver'
-  },
-  {
     title: 'Let my People go Surfing',
     author: 'Yvon Chouinard'
   },
   {
     title: 'Causal Inference in Statistics',
     author: 'Judea Pearl'
+  },
+  {
+    title: 'Word2Vec',
+    author: 'Chris McCormick',
+    url: 'http://mccormickml.com/2016/04/19/word2vec-tutorial-the-skip-gram-model/'
+  },
+  {
+    title: 'GTP',
+    author: 'Muhan Zhang, Yixin Chen',
+    url: 'https://arxiv.org/pdf/1802.09691.pdf'
   }
 ];
 

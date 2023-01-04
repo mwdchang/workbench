@@ -104,9 +104,13 @@ export class DrilldownPopup extends Popup {
     iframe.style.width = '100%';
     iframe.style.height = '100%';
 
-    iframe.src = 'https://s3-us-west-2.amazonaws.com/openai-assets/research-covers/language-unsupervised/language_understanding_paper.pdf#zoom=75';
+    // FIXME
+    const url = this.item.rawData.url || 'http://www.google.com';
+
+    iframe.src = url;
 
     tabContent.className = 'tab-content';
+    tabContent.style.height = '80%';
     tabContent.appendChild(iframe);
     this.contentDiv.appendChild(tabContent);
   }
