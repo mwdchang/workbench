@@ -44,7 +44,7 @@ const bench = new Workbench(containerElem, {
   width: 1000,
   height: 400,
   useGrid: true,
-  useRotation: false,
+  useRotation: true,
 
   itemDisplayTextFn: (item) => {
     return item.rawData.title

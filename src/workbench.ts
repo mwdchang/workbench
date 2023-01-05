@@ -3,7 +3,7 @@ import { Popup } from './popup';
 import { DrilldownPopup } from './drilldown-popup';
 import { CollectionPopup } from './collection-popup';
 import { inside } from './polygon-intersect';
-import { Point, Item, Collection, WorkBenchOptions } from './types';
+import { StickyNote, Point, Item, Collection, WorkBenchOptions } from './types';
 import * as Matter from 'matter-js';
 
 type CollectionDragEvent = {
@@ -25,8 +25,18 @@ type ItemDragEvent = {
 type ItemClickEvent = {
   x: number,
   y: number,
+  screenX: number,
+  screenY: number,
   item: Item<any>
 }
+
+type SurfaceClickEvent = {
+  x: number,
+  y: number,
+  screenX: number,
+  screenY: number
+}
+
 
 
 const EPS = 0.00001;
@@ -42,6 +52,7 @@ export class Workbench {
   renderer: SVGRenderer = null;
   items: Item<any>[] = [];
   collections: Collection<any>[] = [];
+  stickyNotes: StickyNote<any>[] = [];
 
   options: WorkBenchOptions = null;
 
@@ -153,14 +164,20 @@ export class Workbench {
     });
 
     renderer.on('item-click', (_, payload: ItemClickEvent) => {
-      const { item, x, y } = payload;
+      const { item, screenX, screenY } = payload;
       if (this.shiftKey === true) {
         item.flags.selected = !item.flags.selected;
         return;
       }
 
-      const popupX = x + 20;
-      const popupY = y + 20;
+      const opened = this.renderer.linkMap.values();
+      for (const openItem of opened) {
+        if (item.id === openItem.id) return;
+      }
+
+      // FIXME: don't fix coords
+      const popupX = screenX + 20;
+      const popupY = screenY + 20;
       const popup = new DrilldownPopup({ x: popupX, y: popupY, width: 600, height: 320 }, item);
       popup.attach();
       popup.on('close', () => {
@@ -341,6 +358,13 @@ export class Workbench {
       });
       renderer.lasso([]);
     });
+
+    renderer.on('surface-dblclick', (_, payload: SurfaceClickEvent) => {
+      console.log('double click');
+
+      const { x, y } = payload;
+      this.renderer.addStickyNote(x, y);
+    });
   }
 
   // FIXME
@@ -374,6 +398,9 @@ export class Workbench {
         collection.flags.matched = true;
       }
     });
+  }
+
+  stickyNote() {
   }
 
   clear() {

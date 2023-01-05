@@ -7,7 +7,10 @@ import { Popup } from './popup';
 const translate = (x: number, y: number) => `translate(${x}, ${y})`;
 
 const C_ITEM_FILL = '#DDDD00';
-const C_ITEM_SELECTED = '#336699';
+const C_ITEM_STROKE = '#888888';
+
+// const C_ITEM_SELECTED_FILL = C_ITEM_FILL;
+const C_ITEM_SELECTED_STROKE = '#336699';
 
 /**
  * Handles object rendering and sending upstream the interaction semantics.
@@ -69,8 +72,12 @@ export class SVGRenderer extends EventEmitter {
         return d.flags.selected ? 3 : 1;
       })
       .attr('stroke', d => {
-        return d.flags.selected ? C_ITEM_SELECTED : C_ITEM_FILL;
+        return d.flags.selected ? C_ITEM_SELECTED_STROKE : C_ITEM_STROKE;
       });
+
+    // this.surface.selectAll<any, Item<any>>('.item-group')
+    //   .select('foreignObject')
+    //   .style('font-size', `${100/this.zoomObj.k}%`);
 
     this.surface.selectAll<any, Collection<any>>('.collection-group')
       .attr('transform', d => {
@@ -157,7 +164,7 @@ export class SVGRenderer extends EventEmitter {
     this.surface.append('path')
       .classed('lasso', true)
       .attr('d', pathFn(path as any) as any)
-      .style('fill', C_ITEM_SELECTED)
+      .style('fill', '#5566CC')
       .style('fill-opacity', 0.1);
 
     this.surface.selectAll('.lasso')
@@ -245,6 +252,14 @@ export class SVGRenderer extends EventEmitter {
     });
   }
 
+  addStickyNote(x: number, y: number) {
+    this.surface.append('circle')
+      .attr('cx', x)
+      .attr('cy', y)
+      .attr('r', 5)
+      .attr('fill', 'red');
+  }
+
   addItems(items: Item<any>[]) {
     const dragStart = (event: D3DragEvent<any, any, any>) => {
       event.sourceEvent.stopPropagation();
@@ -274,7 +289,8 @@ export class SVGRenderer extends EventEmitter {
         .attr('width', max.x - min.x)
         .attr('height', max.y - min.y)
         .attr('fill', C_ITEM_FILL)
-        .attr('stroke', '#BBB')
+        .attr('stroke', C_ITEM_STROKE)
+        .attr('stroke-width', 8)
         .style('cursor', 'pointer');
 
       // itemG.append('text')
@@ -339,6 +355,18 @@ export class SVGRenderer extends EventEmitter {
       this.emit('surface-click');
     });
 
+    this.surface.select('.surface-panel').on('dblclick', (event: any) => {
+      const x = this.multiplier * (event.offsetX - this.zoomObj.x) / this.zoomObj.k;
+      const y = this.multiplier * (event.offsetY - this.zoomObj.y) / this.zoomObj.k;
+      this.emit('surface-dblclick', {
+        x,
+        y,
+        screenX: event.offsetX,
+        screenY: event.offsetY
+      });
+    });
+
+
 
     // Setup zoom
     // https://observablehq.com/@d3/pan-zoom-axes
@@ -372,16 +400,16 @@ export class SVGRenderer extends EventEmitter {
       if (this.options.useGrid) {
         gX.call(xAxis.scale(transform.rescaleX(x)));
         gY.call(yAxis.scale(transform.rescaleY(y)));
-        this.svg.selectAll('.axis').selectAll('line').style('opacity', 0.1);
-        this.svg.selectAll('.axis').selectAll('text').style('opacity', 0.5);
+        this.svg.selectAll('.axis').selectAll('line').style('opacity', 0.1).style('pointer-events', 'none');
+        this.svg.selectAll('.axis').selectAll('text').style('opacity', 0.5).style('pointer-events', 'none');
       }
     }
 
     if (this.options.useGrid) {
       gX.call(xAxis);
       gY.call(yAxis);
-      this.svg.selectAll('.axis').selectAll('line').style('opacity', 0.1);
-      this.svg.selectAll('.axis').selectAll('text').style('opacity', 0.5);
+      this.svg.selectAll('.axis').selectAll('line').style('opacity', 0.1).style('pointer-events', 'none');
+      this.svg.selectAll('.axis').selectAll('text').style('opacity', 0.5).style('pointer-events', 'none');
     }
 
     function filterZoom(event: any) {
@@ -393,10 +421,12 @@ export class SVGRenderer extends EventEmitter {
     }
 
     const zoom = d3.zoom()
-      .scaleExtent([1, 5])
+      .scaleExtent([1, 15])
       .translateExtent([[0, 0], [width, height]])
       .filter(filterZoom)
       .on("zoom", zoomed);
-    this.svg.call(zoom);
+
+    this.svg.call(zoom)
+      .on('dblclick.zoom', null);
   }
 }

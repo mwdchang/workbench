@@ -63,3 +63,9 @@ export type Item<T> = {
   dx?: number
   dy?: number
 }
+
+export type StickyNote<T> = {
+  id: string | number
+  body: Matter.Body
+  items: Item<T>[]
+}
