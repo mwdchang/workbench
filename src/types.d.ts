@@ -31,7 +31,7 @@ export type WorkBenchOptions = {
   useGrid: boolean
   useRotation: boolean
 
-  itemDisplayTextFn: (i: Item<any>) => string
+  itemDisplayTextFn: (i: Item<any>, k: number) => string
 }
 
 export type Collection<T> = {

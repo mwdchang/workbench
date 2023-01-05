@@ -75,9 +75,14 @@ export class SVGRenderer extends EventEmitter {
         return d.flags.selected ? C_ITEM_SELECTED_STROKE : C_ITEM_STROKE;
       });
 
-    // this.surface.selectAll<any, Item<any>>('.item-group')
-    //   .select('foreignObject')
-    //   .style('font-size', `${100/this.zoomObj.k}%`);
+    // FIXME: need to detect for suffcient changes, otherwise this keeps replaceing
+    if (this.zoomObj.k < 4) {
+      this.surface.selectAll<any, Item<any>>('.item-group')
+        .select('foreignObject')
+        .style('font-size', `${Math.max(3, 15/this.zoomObj.k)}px`)
+        .select('div')
+        .html(d => this.options.itemDisplayTextFn(d, this.zoomObj.k));
+    }
 
     this.surface.selectAll<any, Collection<any>>('.collection-group')
       .attr('transform', d => {
@@ -224,6 +229,7 @@ export class SVGRenderer extends EventEmitter {
         .attr('width', max.x - min.x)
         .attr('height', max.y - min.y)
         .attr('fill', '#FDD')
+        .attr('vector-effect', 'non-scaling-stroke')
         .attr('stroke', '#BBB');
 
       const offset = 5;
@@ -289,28 +295,26 @@ export class SVGRenderer extends EventEmitter {
         .attr('width', max.x - min.x)
         .attr('height', max.y - min.y)
         .attr('fill', C_ITEM_FILL)
+        .attr('vector-effect', 'non-scaling-stroke')
         .attr('stroke', C_ITEM_STROKE)
         .attr('stroke-width', 8)
         .style('cursor', 'pointer');
 
-      // itemG.append('text')
-      //   .attr('x', 25)
-      //   .attr('y', 10)
-      //   .text(this.options.itemDisplayTextFn(item));
-
       itemG.on('click', (event: any) => {
-        this.emit('item-click', { x: event.x, y: event. y, item });
+        this.emit('item-click', { screenX: event.x, screenY: event. y, item });
       });
 
       const offset = 5;
       itemG.append('foreignObject')
+        .attr('xmlns', 'http://www.w3.org/2000/svg')
         .attr('x', (max.x - min.x) * 0.5 + offset)
         .attr('y', -(max.y - min.y) * 0.5 - offset)
         .attr('width', 120)
         .attr('height', 100)
-        .style('pointer-events', 'none')
+        // .style('pointer-events', 'none')
         .append('xhtml:div')
-        .html(this.options.itemDisplayTextFn(item));
+        .attr('xmlns', 'http://www.w3.org/1999/xhtml')
+        .html(this.options.itemDisplayTextFn(item, this.zoomObj.k));
 
       const itemDrag = d3.drag()
         .on('start', dragStart)
