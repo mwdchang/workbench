@@ -62,6 +62,9 @@ export class Workbench {
   contextPopup: Popup = null;
   shiftKey: boolean = false;
 
+  drilldownMap: Map<Item<any>, Popup> = new Map();
+
+
   constructor(containerElem: HTMLDivElement, options: WorkBenchOptions) {
     this.renderer = new SVGRenderer(options);
     this.renderer.init(containerElem);
@@ -172,7 +175,12 @@ export class Workbench {
 
       const opened = this.renderer.linkMap.values();
       for (const openItem of opened) {
-        if (item.id === openItem.id) return;
+        if (item.id === openItem.id) {
+          const popup = this.drilldownMap.get(item);
+          popup.detatch();
+          this.renderer.unlinkPopup(popup);
+          return;
+        }
       }
 
       // FIXME: don't fix coords
@@ -183,6 +191,7 @@ export class Workbench {
       popup.on('close', () => {
         this.renderer.unlinkPopup(popup);
       });
+      this.drilldownMap.set(item, popup);
 
       this.renderer.linkPopup(popup, item);
     });
@@ -216,7 +225,7 @@ export class Workbench {
     this.items = items.map((d, i) => {
       const x = 50 + 25 * i;
       const y = 50 + 50 * i;
-      const width = 40;
+      const width = 30;
       const height = 40;
 
       const body = Matter.Bodies.rectangle(x, y, width, height, {

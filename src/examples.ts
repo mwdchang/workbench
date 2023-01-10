@@ -3,6 +3,7 @@
 **/
 
 
+// derived from 
 // https://xdd.wisc.edu/api/articles?max=6&term=covid&additional_fields=title,author,abstract
 export const xddItems = [
     {

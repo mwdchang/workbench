@@ -3,10 +3,11 @@ import {D3DragEvent} from 'd3';
 import {EventEmitter} from './event-emitter';
 import { Point, Item, WorkBenchOptions, Collection } from "./types";
 import { Popup } from './popup';
+import { PAPER } from './assets';
 
 const translate = (x: number, y: number) => `translate(${x}, ${y})`;
 
-const C_ITEM_FILL = '#DDDD00';
+// const C_ITEM_FILL = '#DDDD00';
 const C_ITEM_STROKE = '#888888';
 
 // const C_ITEM_SELECTED_FILL = C_ITEM_FILL;
@@ -150,7 +151,7 @@ export class SVGRenderer extends EventEmitter {
         .attr('y1', y1)
         .attr('x2', x2)
         .attr('y2', y2)
-        .style('stroke', '#F20');
+        .style('stroke', '#888');
     }
   }
   linkPopup(popup: Popup, item: Item<any>) {
@@ -287,18 +288,24 @@ export class SVGRenderer extends EventEmitter {
       const { x, y } = item.body.position;
       const { max, min } = item.body.bounds;
 
+      const W = (max.x - min.x);
+      const H = (max.y - min.y);
+
       itemG.attr('transform', translate(x, y)).datum(item);
+
+      itemG.append('path')
+        .attr('transform', `translate(${0.5 * -W},${0.5 * -H}) scale(${W / PAPER.width}, ${H / PAPER.height})`)
+        .attr('vector-effect', 'non-scaling-stroke')
+        .attr('d', PAPER.path)
+        .style('cursor', 'pointer');
 
       itemG.append('rect')
         .attr('x', -(max.x - min.x) * 0.5)
         .attr('y', -(max.y - min.y) * 0.5)
         .attr('width', max.x - min.x)
         .attr('height', max.y - min.y)
-        .attr('fill', C_ITEM_FILL)
-        .attr('vector-effect', 'non-scaling-stroke')
-        .attr('stroke', C_ITEM_STROKE)
-        .attr('stroke-width', 8)
-        .style('cursor', 'pointer');
+        .attr('fill', 'transparent')
+        .attr('stroke', 'transparent');
 
       itemG.on('click', (event: any) => {
         this.emit('item-click', { screenX: event.x, screenY: event. y, item });
