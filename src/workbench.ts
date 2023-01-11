@@ -331,7 +331,9 @@ export class Workbench {
         const lastX = this.selectedPath[len].x;
         const lastY = this.selectedPath[len].y;
         const dist = Math.sqrt( (lastX - x) * (lastX - x) + (lastY - y) * (lastY - y));
-        if (dist < 15) return;
+
+        // FIXME: don't expose underlying vars
+        if (dist < 15 / this.renderer.zoomObj.k) return;
         this.selectedPath.push({ x, y });
       }
       renderer.lasso(this.selectedPath);
@@ -369,8 +371,6 @@ export class Workbench {
     });
 
     renderer.on('surface-dblclick', (_, payload: SurfaceClickEvent) => {
-      console.log('double click');
-
       const { x, y } = payload;
       this.renderer.addStickyNote(x, y);
     });

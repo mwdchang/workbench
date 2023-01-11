@@ -21,7 +21,7 @@ const bench = new Workbench(containerElem, {
   itemDisplayTextFn: (item, k) => {
     if (k > 2.8) {
       return item.rawData.title + '<hr>' + 
-        `<a href="${item.rawData.link[0].url}"> link </a><br>` + 
+        `<a href="${item.rawData.link[0].url}" target="_blank"> ${item.rawData.link[0].url} </a><br>` + 
         item.rawData.abstract.substring(0, 70 * k);
     }
     return item.rawData.title.length < 25 ? item.rawData.title : item.rawData.title.substring(0, 25) + '...';

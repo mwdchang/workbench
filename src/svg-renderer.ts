@@ -21,6 +21,7 @@ export class SVGRenderer extends EventEmitter {
   surface: d3.Selection<any, any, SVGElement, any> = null
   options: WorkBenchOptions = null
   zoomObj: { x: number, y: number, k: number} = { x: 0, y: 0, k: 1 }
+  lastK: number  = 1.0
   multiplier = 1.25
 
   linkMap: Map<Popup, Item<any>> = new Map()
@@ -77,7 +78,7 @@ export class SVGRenderer extends EventEmitter {
       });
 
     // FIXME: need to detect for suffcient changes, otherwise this keeps replaceing
-    if (this.zoomObj.k < 4) {
+    if (this.zoomObj.k < 4 && this.lastK !== this.zoomObj.k) {
       this.surface.selectAll<any, Item<any>>('.item-group')
         .select('foreignObject')
         .style('font-size', `${Math.max(3, 15/this.zoomObj.k)}px`)
@@ -118,6 +119,8 @@ export class SVGRenderer extends EventEmitter {
       }
     });
     this.drawLinks();
+
+    this.lastK = this.zoomObj.k;
   }
 
   clear() {
@@ -181,8 +184,8 @@ export class SVGRenderer extends EventEmitter {
       .attr('cx', d => d.x)
       .attr('cy', d => d.y)
       .attr('r', (_, i) => {
-        if (i === 0) return 5;
-        return 3;
+        if (i === 0) return 5 / this.zoomObj.k;
+        return 3 / this.zoomObj.k;
       })
       .attr('fill', '#888')
       .attr('stroke', '#888');
@@ -239,7 +242,7 @@ export class SVGRenderer extends EventEmitter {
         .attr('y', -(max.y - min.y) * 0.5 - offset)
         .attr('width', 120)
         .attr('height', 50)
-        .style('pointer-events', 'none')
+        // .style('pointer-events', 'none')
         .append('xhtml:div')
         .html(`${collection.id} (${collection.children.length})`);
 
@@ -318,7 +321,9 @@ export class SVGRenderer extends EventEmitter {
         .attr('y', -(max.y - min.y) * 0.5 - offset)
         .attr('width', 120)
         .attr('height', 100)
-        // .style('pointer-events', 'none')
+        .on('click', (event) => {
+          event.stopPropagation();
+        })
         .append('xhtml:div')
         .attr('xmlns', 'http://www.w3.org/1999/xhtml')
         .html(this.options.itemDisplayTextFn(item, this.zoomObj.k));
@@ -367,8 +372,9 @@ export class SVGRenderer extends EventEmitter {
     });
 
     this.surface.select('.surface-panel').on('dblclick', (event: any) => {
-      const x = this.multiplier * (event.offsetX - this.zoomObj.x) / this.zoomObj.k;
-      const y = this.multiplier * (event.offsetY - this.zoomObj.y) / this.zoomObj.k;
+      const x = (event.offsetX * this.multiplier - this.zoomObj.x) / this.zoomObj.k;
+      const y = (event.offsetY * this.multiplier - this.zoomObj.y) / this.zoomObj.k;
+      // console.log('double click', event.offsetX, event.offsetY);
       this.emit('surface-dblclick', {
         x,
         y,
