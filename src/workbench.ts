@@ -151,8 +151,17 @@ export class Workbench {
 
       if (item.dx === undefined || item.dy === undefined) return;
 
-      const fx = item.dx / 500;
-      const fy = item.dy / 500;
+      let fx = item.dx / 300; 
+      let fy = item.dy / 300; 
+
+      // Dampen
+      const mag = Math.sqrt( fx * fx + fy * fy);
+      if (mag > 0.15) {
+        console.log('before', fx, fy);
+        fx = fx / mag * 0.15;
+        fy = fy / mag * 0.15;
+        console.log('after', fx, fy);
+      }
 
       if (Math.abs(fx) < EPS && Math.abs(fy) < EPS) return;
 
@@ -184,8 +193,8 @@ export class Workbench {
       }
 
       // FIXME: don't fix coords
-      const popupX = screenX + 20;
-      const popupY = screenY + 20;
+      const popupX = screenX + 50;
+      const popupY = 50;
       const popup = new DrilldownPopup({ x: popupX, y: popupY, width: 600, height: 320 }, item);
       popup.attach();
       popup.on('close', () => {
@@ -229,7 +238,7 @@ export class Workbench {
       const height = 40;
 
       const body = Matter.Bodies.rectangle(x, y, width, height, {
-        friction: 0.8, frictionAir: 0.01
+        friction: 0.8, frictionAir: 0.015
       });
       Matter.Composite.add(engine.world, [body]);
 

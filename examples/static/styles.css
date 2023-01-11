@@ -1,7 +1,12 @@
 :root {
-  --popup-background: #F8F8F8;
-  --border: 1px solid #DDD;
+  --popup-background: #FDFDFD;
+  --border: 1px solid #D8D8D8;
   --border-radius: 5px;
+}
+
+h1, h2, h3, h4, p {
+  margin-block-start: 0.25rem;
+  margin-block-end: 0.25rem;
 }
 
 body {
@@ -27,6 +32,11 @@ input {
   border: 1px solid #CCCCCC;
 }
 
+textarea {
+  border: var(--border);
+  font-size: 90%;
+}
+
 .popup {
   position: absolute;
   width: 300px;
@@ -38,7 +48,7 @@ input {
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  box-shadow: 2px 2px 2px #DDD;
+  box-shadow: 0px 0px 3px #DDD;
 }
 
 .popup > .content {
@@ -89,3 +99,5 @@ input {
 .toolbar > * > button {
   margin-left: 3px;
 }
+
+

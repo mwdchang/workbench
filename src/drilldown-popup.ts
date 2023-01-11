@@ -77,10 +77,11 @@ export class DrilldownPopup extends Popup {
     tabContent.style['flex-direction'] = 'row';
 
     const textarea = document.createElement('textarea');
-    textarea.style.width = '50%';
+    textarea.style.width = '40%';
     textarea.style.height = '12rem';
 
     const markdown = document.createElement('div');
+    markdown.style.flex = '1';
     markdown.style.padding = '2px';
     markdown.style.height = '12rem';
     markdown.style.overflowY = 'scroll';
