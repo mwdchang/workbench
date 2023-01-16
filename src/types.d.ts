@@ -31,6 +31,9 @@ export type WorkBenchOptions = {
   useGrid: boolean
   useRotation: boolean
 
+
+	itemSearchFn: (i: Item<any>, s: string) => boolean
+
   itemDisplayTextFn: (i: Item<any>, k: number) => string
 }
 

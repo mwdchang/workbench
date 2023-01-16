@@ -438,7 +438,7 @@ export class SVGRenderer extends EventEmitter {
     }
 
     const zoom = d3.zoom()
-      .scaleExtent([1, 15])
+      .scaleExtent([0.2, 15])
       .translateExtent([[0, 0], [width, height]])
       .filter(filterZoom)
       .on("zoom", zoomed);

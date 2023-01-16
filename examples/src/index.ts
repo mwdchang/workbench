@@ -6,17 +6,28 @@ import { xddItems } from '../../src';
 // Example
 ////////////////////////////////////////////////////////////////////////////////
 const containerElem = document.createElement('div');
-containerElem.style.width = '1000px'
+containerElem.style.width = '1200px'
 containerElem.style.height = '400px'
 containerElem.style.border = '1px solid #DDD'
 
 document.body.appendChild(containerElem);
+
+const searchFn = (item: any, str: string) => {
+	const includes = (a, b) => a.toLowerCase().includes(b.toLowerCase());
+
+	if (includes(item.rawData.title, str)) return true;
+	if (includes(item.rawData.abstract, str)) return true;
+	return false;
+}
+
 
 const bench = new Workbench(containerElem, {
   width: 1000,
   height: 400,
   useGrid: true,
   useRotation: true,
+
+	itemSearchFn: searchFn,
 
   itemDisplayTextFn: (item, k) => {
     if (k > 2.8) {

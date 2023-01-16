@@ -399,11 +399,18 @@ export class Workbench {
       return;
     }
 
-    this.items.forEach(item => {
-      if (item.rawData.author.includes(str) || item.rawData.title.includes(str)) {
-        item.flags.matched = true;
-      }
-    });
+		this.items.forEach(item => {
+			if (this.options.itemSearchFn(item, str) === true) {
+				console.log('hihihi');
+				item.flags.matched = true;
+			}
+		});
+
+    // this.items.forEach(item => {
+    //   if (item.rawData.author.includes(str) || item.rawData.title.includes(str)) {
+    //     item.flags.matched = true;
+    //   }
+    // });
 
     this.collections.forEach(collection => {
       let found = false;
